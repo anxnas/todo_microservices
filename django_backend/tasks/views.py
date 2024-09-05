@@ -1,12 +1,16 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from .models import Task, Category
-from .serializers import TaskSerializer, CategorySerializer
+from .serializers import TaskCreateSerializer, TaskUpdateSerializer, CategorySerializer
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.select_related('user').prefetch_related('categories')
-    serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action in ['update', 'partial_update']:
+            return TaskUpdateSerializer
+        return TaskCreateSerializer
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
