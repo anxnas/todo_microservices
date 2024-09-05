@@ -68,7 +68,7 @@ WSGI_APPLICATION = 'todo_list.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_DB', 'todo_db'),
+        'NAME': os.environ.get('POSTGRES_DB_TODO', 'todo_db'),
         'USER': os.environ.get('POSTGRES_USER', 'todo_user'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'todo_password'),
         'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
