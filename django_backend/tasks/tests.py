@@ -42,14 +42,37 @@ class APITests(TestCase):
             'title': 'API Test Task',
             'description': 'API Test Description',
             'due_date': (timezone.now() + timedelta(days=1)).isoformat(),
-            'categories': [self.category.id]
+            'categories': [{'name': 'Test Category'}]
         }
 
-    def test_create_task(self):
+    def test_create_task_with_category(self):
         response = self.client.post('/api/tasks/', self.task_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Task.objects.count(), 1)
-        self.assertEqual(Task.objects.get().title, 'API Test Task')
+        task = Task.objects.get()
+        self.assertEqual(task.title, 'API Test Task')
+        self.assertEqual(task.categories.count(), 1)
+        self.assertEqual(task.categories.first().name, 'Test Category')
+
+    def test_create_task_without_category(self):
+        task_data = self.task_data.copy()
+        task_data.pop('categories')
+        response = self.client.post('/api/tasks/', task_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Task.objects.count(), 1)
+        task = Task.objects.get()
+        self.assertEqual(task.title, 'API Test Task')
+        self.assertEqual(task.categories.count(), 0)
+
+    def test_create_task_with_new_category(self):
+        self.task_data['categories'] = [{'name': 'New Category'}]
+        response = self.client.post('/api/tasks/', self.task_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Task.objects.count(), 1)
+        task = Task.objects.get()
+        self.assertEqual(task.categories.count(), 1)
+        self.assertEqual(task.categories.first().name, 'New Category')
+        self.assertEqual(Category.objects.count(), 2)  # 'Test Category' and 'New Category'
 
     def test_get_tasks(self):
         Task.objects.create(title='Test Task', user=self.user)
