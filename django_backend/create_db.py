@@ -2,7 +2,7 @@ import psycopg2
 from django.conf import settings
 
 
-def create_database():
+def create_database() -> None:
     conn = psycopg2.connect(
         dbname='postgres',
         user=settings.DATABASES['default']['USER'],
@@ -13,7 +13,7 @@ def create_database():
     conn.autocommit = True
     cursor = conn.cursor()
 
-    db_name = settings.DATABASES['default']['NAME']
+    db_name: str = settings.DATABASES['default']['NAME']
 
     try:
         cursor.execute(f"CREATE DATABASE {db_name}")
@@ -23,7 +23,3 @@ def create_database():
     finally:
         cursor.close()
         conn.close()
-
-
-if __name__ == "__main__":
-    create_database()
