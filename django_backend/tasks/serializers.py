@@ -7,7 +7,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 class TaskCreateSerializer(serializers.ModelSerializer):
-    categories = CategorySerializer(many=True, read_only=True)
+    categories = CategorySerializer(many=True)
 
     class Meta:
         model = Task
@@ -23,7 +23,7 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         return task
 
 class TaskUpdateSerializer(serializers.ModelSerializer):
-    categories = CategorySerializer(many=True, read_only=True)
+    categories = CategorySerializer(many=True)
     title = serializers.CharField(required=False)
 
     class Meta:
