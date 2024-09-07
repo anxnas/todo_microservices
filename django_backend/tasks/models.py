@@ -36,7 +36,7 @@ class CustomPKModel(models.Model):
         if not self.id:
             timestamp: int = int(time.time() * 1000)
             hash_object = hashlib.sha256(str(timestamp).encode())
-            self.id = hash_object.hexdigest()[:64]
+            self.id = hash_object.hexdigest()[:10]
             logger.info(f"Сгенерирован новый ID для {self.__class__.__name__}: {self.id}")
         try:
             super().save(*args, **kwargs)

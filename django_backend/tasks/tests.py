@@ -22,14 +22,14 @@ class ModelTests(TestCase):
     def test_category_creation(self):
         self.assertEqual(self.category.name, 'Test Category')
         self.assertTrue(isinstance(self.category.id, str))
-        self.assertEqual(len(self.category.id), 64)
+        self.assertEqual(len(self.category.id), 10)
 
     def test_task_creation(self):
         self.assertEqual(self.task.title, 'Test Task')
         self.assertEqual(self.task.user, self.user)
         self.assertEqual(self.task.categories.count(), 1)
         self.assertTrue(isinstance(self.task.id, str))
-        self.assertEqual(len(self.task.id), 64)
+        self.assertEqual(len(self.task.id), 10)
 
 
 class APITests(TestCase):
