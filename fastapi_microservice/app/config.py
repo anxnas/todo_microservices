@@ -14,5 +14,6 @@ class Settings:
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379")
     API_USERNAME_TODO: str = os.getenv("API_USERNAME_TODO", "admin")
     API_PASSWORD_TODO: str = os.getenv("API_PASSWORD_TODO", "12345678")
+    LOG_LEVEL: str = "INFO"
 
 settings = Settings()
