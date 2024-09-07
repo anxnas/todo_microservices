@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+from profi_log import MasterLogger
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -136,5 +137,5 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
-PROFI_LOG_LEVEL = 'DEBUG'
-PROFI_LOG_COLORED_CONSOLE = True
+LOGGER = MasterLogger("logs/register.log", level='INFO')
+LOGGER_CONSOLE = LOGGER.setup_colored_console_logging()

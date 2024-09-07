@@ -4,21 +4,9 @@ from django.http import HttpRequest
 from django.db.models import QuerySet
 from django.core.exceptions import ValidationError
 from .models import Task, Category
-from profi_log import MasterLogger
 from django.conf import settings
 
-# Получаем уровень логирования из настроек Django
-log_level = getattr(settings, 'PROFI_LOG_LEVEL', 'INFO')
-
-# Получаем настройку для цветного логирования
-use_colored_console = getattr(settings, 'PROFI_LOG_COLORED_CONSOLE', True)
-
-# Инициализация логгера
-logger = MasterLogger("logs/admin.log", level=log_level)
-
-# Настройка цветного логирования в консоль, если это включено в настройках
-if use_colored_console:
-    logger.setup_colored_console_logging()
+logger = settings.LOGGER.get_logger('admin')
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):

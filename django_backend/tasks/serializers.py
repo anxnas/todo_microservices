@@ -1,22 +1,11 @@
 from rest_framework import serializers
 from typing import Dict, Any, List
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 from .models import Task, Category
-from profi_log import MasterLogger
 from django.conf import settings
 
-# Получаем уровень логирования из настроек Django
-log_level = getattr(settings, 'PROFI_LOG_LEVEL', 'INFO')
-
-# Получаем настройку для цветного логирования
-use_colored_console = getattr(settings, 'PROFI_LOG_COLORED_CONSOLE', True)
-
-# Инициализация логгера
-logger = MasterLogger("logs/serializers.log", level=log_level)
-
-# Настройка цветного логирования в консоль, если это включено в настройках
-if use_colored_console:
-    logger.setup_colored_console_logging()
+logger = settings.LOGGER.get_logger('serializers')
 
 class CategorySerializer(serializers.ModelSerializer):
     """
@@ -121,3 +110,41 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
             logger.log_exception(f"Ошибка валидации при обновлении задачи: {str(e)}")
         except Exception as e:
             logger.log_exception(f"Неожиданная ошибка при обновлении задачи: {str(e)}")
+
+class UserSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели User.
+    """
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields: List[str] = ['id', 'username', 'email', 'password']
+
+    def create(self, validated_data: Dict[str, Any]) -> User:
+        """
+        Создает нового пользователя.
+
+        Args:
+            validated_data (Dict[str, Any]): Валидированные данные для создания пользователя.
+
+        Returns:
+            User: Созданный объект пользователя.
+
+        Raises:
+            ValidationError: Если возникла ошибка при создании пользователя.
+        """
+        try:
+            user = User.objects.create_user(
+                username=validated_data['username'],
+                email=validated_data.get('email', ''),
+                password=validated_data['password']
+            )
+            logger.info(f"Создан новый пользователь: {user.username}")
+            return user
+        except ValidationError as e:
+            logger.log_exception(f"Ошибка валидации при создании пользователя: {str(e)}")
+            raise
+        except Exception as e:
+            logger.log_exception(f"Неожиданная ошибка при создании пользователя: {str(e)}")
+            raise

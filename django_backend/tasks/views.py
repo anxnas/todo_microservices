@@ -1,26 +1,13 @@
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets, generics
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from .models import Task, Category
-from .serializers import TaskCreateSerializer, TaskUpdateSerializer, CategorySerializer
-from profi_log import MasterLogger
+from .serializers import TaskCreateSerializer, TaskUpdateSerializer, CategorySerializer, UserSerializer
 
-# Инициализация логгера
-# Получаем уровень логирования из настроек Django
-log_level = getattr(settings, 'PROFI_LOG_LEVEL', 'INFO')
-
-# Получаем настройку для цветного логирования
-use_colored_console = getattr(settings, 'PROFI_LOG_COLORED_CONSOLE', True)
-
-# Инициализация логгера
-logger = MasterLogger("logs/views.log", level=log_level)
-
-# Настройка цветного логирования в консоль, если это включено в настройках
-if use_colored_console:
-    logger.setup_colored_console_logging()
+logger = settings.LOGGER.get_logger('views')
 
 class TaskViewSet(viewsets.ModelViewSet):
     """
@@ -179,3 +166,27 @@ class CategoryViewSet(viewsets.ModelViewSet):
             logger.log_exception(f"Ошибка при удалении категории пользователем {request.user}")
             return Response({"error": "Произошла ошибка при удалении категории"},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class CreateUserView(generics.CreateAPIView):
+    """
+    Представление для создания нового пользователя.
+    Доступно только для администраторов.
+    """
+    serializer_class = UserSerializer
+    permission_classes = [IsAdminUser]
+
+    def create(self, request, *args, **kwargs):
+        """
+        Создает нового пользователя.
+        """
+        try:
+            logger.info(f"Попытка создания нового пользователя администратором {request.user}")
+            response = super().create(request, *args, **kwargs)
+            logger.info(f"Пользователь успешно создан администратором {request.user}")
+            return response
+        except Exception as e:
+            logger.log_exception(f"Ошибка при создании пользователя администратором {request.user}: {str(e)}")
+            return Response(
+                {"error": "Произошла ошибка при создании пользователя"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
