@@ -1,11 +1,13 @@
-from rest_framework import viewsets, generics
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.contrib.auth.models import User
 from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from .models import Task, Category
-from .serializers import TaskCreateSerializer, TaskUpdateSerializer, CategorySerializer, UserSerializer
+from .serializers import TaskCreateSerializer, TaskUpdateSerializer, CategorySerializer, UserSerializer, PublicUserSerializer
 
 logger = settings.LOGGER.get_logger('views')
 
@@ -167,26 +169,89 @@ class CategoryViewSet(viewsets.ModelViewSet):
             return Response({"error": "Произошла ошибка при удалении категории"},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class CreateUserView(generics.CreateAPIView):
+class UserViewSet(viewsets.ModelViewSet):
     """
-    Представление для создания нового пользователя.
-    Доступно только для администраторов.
+    ViewSet для управления пользователями.
+    Доступно только для суперпользователей.
     """
+    queryset = User.objects.filter(is_staff=False, is_superuser=False)
     serializer_class = UserSerializer
     permission_classes = [IsAdminUser]
 
-    def create(self, request, *args, **kwargs):
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    def public_info(self, request, pk=None):
         """
-        Создает нового пользователя.
+        Возвращает общедоступную информацию о пользователе по его ID.
         """
         try:
-            logger.info(f"Попытка создания нового пользователя администратором {request.user}")
-            response = super().create(request, *args, **kwargs)
-            logger.info(f"Пользователь успешно создан администратором {request.user}")
-            return response
+            user = User.objects.get(pk=pk)
+            serializer = PublicUserSerializer(user)
+            logger.info(f"Запрошена публичная информация о пользователе с ID {pk}")
+            return Response(serializer.data)
+        except User.DoesNotExist:
+            logger.warning(f"Попытка получить информацию о несуществующем пользователе с ID {pk}")
+            return Response({"error": "Пользователь не найден"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            logger.log_exception(f"Ошибка при создании пользователя администратором {request.user}: {str(e)}")
-            return Response(
-                {"error": "Произошла ошибка при создании пользователя"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            logger.log_exception(f"Ошибка при получении публичной информации о пользователе с ID {pk}: {str(e)}")
+            return Response({"error": "Произошла ошибка при получении информации о пользователе"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def list(self, request, *args, **kwargs):
+        """
+        Возвращает список всех обычных пользователей.
+        """
+        try:
+            logger.info(f"Запрос списка пользователей от суперпользователя {request.user}")
+            return super().list(request, *args, **kwargs)
+        except Exception as e:
+            logger.log_exception(f"Ошибка при получении списка пользователей: {str(e)}")
+            return Response({"error": "Произошла ошибка при получении списка пользователей"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Возвращает детальную информацию об обычном пользователе.
+        """
+        try:
+            logger.info(f"Запрос информации о пользователе от суперпользователя {request.user}")
+            return super().retrieve(request, *args, **kwargs)
+        except Exception as e:
+            logger.log_exception(f"Ошибка при получении информации о пользователе: {str(e)}")
+            return Response({"error": "Произошла ошибка при получении информации о пользователе"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Создает нового обычного пользователя.
+        """
+        try:
+            logger.info(f"Создание нового пользователя суперпользователем {request.user}")
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            logger.log_exception(f"Ошибка при создании пользователя: {str(e)}")
+            return Response({"error": "Произошла ошибка при создании пользователя"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Обновляет информацию об обычном пользователе.
+        """
+        try:
+            logger.info(f"Обновление пользователя суперпользователем {request.user}")
+            return super().update(request, *args, **kwargs)
+        except Exception as e:
+            logger.log_exception(f"Ошибка при обновлении пользователя: {str(e)}")
+            return Response({"error": "Произошла ошибка при обновлении пользователя"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Удаляет обычного пользователя.
+        """
+        try:
+            logger.info(f"Удаление пользователя суперпользователем {request.user}")
+            return super().destroy(request, *args, **kwargs)
+        except Exception as e:
+            logger.log_exception(f"Ошибка при удалении пользователя: {str(e)}")
+            return Response({"error": "Произошла ошибка при удалении пользователя"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)

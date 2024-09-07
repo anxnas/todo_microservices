@@ -115,15 +115,16 @@ class UserSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели User.
     """
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = User
-        fields: List[str] = ['id', 'username', 'email', 'password']
+        fields: List[str] = ['id', 'username', 'email', 'password', 'is_active', 'date_joined', 'last_login']
+        read_only_fields: List[str] = ['id', 'is_staff', 'is_superuser', 'date_joined', 'last_login']
 
     def create(self, validated_data: Dict[str, Any]) -> User:
         """
-        Создает нового пользователя.
+        Создает нового обычного пользователя.
 
         Args:
             validated_data (Dict[str, Any]): Валидированные данные для создания пользователя.
@@ -135,16 +136,54 @@ class UserSerializer(serializers.ModelSerializer):
             ValidationError: Если возникла ошибка при создании пользователя.
         """
         try:
-            user = User.objects.create_user(
-                username=validated_data['username'],
-                email=validated_data.get('email', ''),
-                password=validated_data['password']
-            )
+            password = validated_data.pop('password')
+            user = User.objects.create_user(**validated_data)
+            user.set_password(password)
+            user.save()
             logger.info(f"Создан новый пользователь: {user.username}")
             return user
         except ValidationError as e:
             logger.log_exception(f"Ошибка валидации при создании пользователя: {str(e)}")
-            raise
+
         except Exception as e:
             logger.log_exception(f"Неожиданная ошибка при создании пользователя: {str(e)}")
-            raise
+
+
+    def update(self, instance: User, validated_data: Dict[str, Any]) -> User:
+        """
+        Обновляет существующего пользователя.
+
+        Args:
+            instance (User): Существующий объект пользователя для обновления.
+            validated_data (Dict[str, Any]): Валидированные данные для обновления пользователя.
+
+        Returns:
+            User: Обновленный объект пользователя.
+
+        Raises:
+            ValidationError: Если возникла ошибка при обновлении пользователя.
+        """
+        try:
+            password = validated_data.pop('password', None)
+            for attr, value in validated_data.items():
+                if attr not in ['is_staff', 'is_superuser']:
+                    setattr(instance, attr, value)
+            if password:
+                instance.set_password(password)
+            instance.save()
+            logger.info(f"Обновлен пользователь: {instance.username}")
+            return instance
+        except ValidationError as e:
+            logger.log_exception(f"Ошибка валидации при обновлении пользователя: {str(e)}")
+
+        except Exception as e:
+            logger.log_exception(f"Неожиданная ошибка при обновлении пользователя: {str(e)}")
+
+
+class PublicUserSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для публичного отображения информации о пользователе.
+    """
+    class Meta:
+        model = User
+        fields: List[str] = ['id', 'username', 'date_joined']
