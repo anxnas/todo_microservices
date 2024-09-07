@@ -3,11 +3,22 @@ import hashlib
 from typing import Any, Dict
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
 from profi_log import MasterLogger
 
 # Инициализация логгера
-logger = MasterLogger("logs/models.log", level="DEBUG")
-logger.setup_colored_console_logging()
+# Получаем уровень логирования из настроек Django
+log_level = getattr(settings, 'PROFI_LOG_LEVEL', 'INFO')
+
+# Получаем настройку для цветного логирования
+use_colored_console = getattr(settings, 'PROFI_LOG_COLORED_CONSOLE', True)
+
+# Инициализация логгера
+logger = MasterLogger("logs/models.log", level=log_level)
+
+# Настройка цветного логирования в консоль, если это включено в настройках
+if use_colored_console:
+    logger.setup_colored_console_logging()
 
 
 class CustomPKModel(models.Model):
