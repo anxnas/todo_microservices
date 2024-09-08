@@ -223,10 +223,15 @@ class UserViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """
         Создает нового обычного пользователя.
+        Позволяет задать ID пользователя, если он предоставлен.
         """
         try:
             logger.info(f"Создание нового пользователя суперпользователем {request.user}")
-            return super().create(request, *args, **kwargs)
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         except Exception as e:
             logger.log_exception(f"Ошибка при создании пользователя: {str(e)}")
             return Response({"error": "Произошла ошибка при создании пользователя"},

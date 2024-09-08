@@ -3,6 +3,7 @@ from django.conf import settings
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -30,8 +31,12 @@ class TokenSerializer(TokenObtainPairSerializer):
             data['user_id'] = self.user.id
             logger.info(f"Токен успешно создан для пользователя {self.user.username}")
             return data
+        except AuthenticationFailed as e:
+            logger.warning(f"Неудачная попытка аутентификации: {str(e)}")
+            raise  # Перебрасываем исключение для обработки в представлении
         except Exception as e:
             logger.log_exception(f"Ошибка при создании токена: {str(e)}")
+            raise
 
 class TokenPairView(TokenObtainPairView):
     """
@@ -55,9 +60,16 @@ class TokenPairView(TokenObtainPairView):
             response = super().post(request, *args, **kwargs)
             logger.info("Успешный запрос на получение токенов")
             return response
+        except AuthenticationFailed as e:
+            logger.warning(f"Неудачная попытка аутентификации: {str(e)}")
+            return Response(
+                {"error": "Неверные учетные данные. Пожалуйста, проверьте логин и пароль."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         except Exception as e:
             logger.log_exception(f"Ошибка при обработке запроса на получение токенов: {str(e)}")
-            return Response({"error": "Произошла ошибка при получении токенов"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Произошла внутренняя ошибка сервера."},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class Token2RefreshSerializer(TokenRefreshSerializer):
     """
@@ -84,6 +96,7 @@ class Token2RefreshSerializer(TokenRefreshSerializer):
             return data
         except Exception as e:
             logger.log_exception(f"Ошибка при обновлении токена: {str(e)}")
+            raise  # Перебрасываем исключение для обработки в представлении
 
 class Token2RefreshView(TokenRefreshView):
     """
@@ -109,4 +122,4 @@ class Token2RefreshView(TokenRefreshView):
             return response
         except Exception as e:
             logger.log_exception(f"Ошибка при обработке запроса на обновление токена: {str(e)}")
-            return Response({"error": "Произошла ошибка при обновлении токена"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

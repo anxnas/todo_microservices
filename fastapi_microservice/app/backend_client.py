@@ -8,10 +8,6 @@ class BackendClientError(Exception):
     """Базовый класс для исключений в этом модуле."""
     pass
 
-class TokenError(BackendClientError):
-    """Исключение, вызываемое при проблемах с получением токена."""
-    pass
-
 class TaskError(BackendClientError):
     """Исключение, вызываемое при проблемах с задачами."""
     pass
@@ -21,39 +17,13 @@ class BackendClient:
 
     def __init__(self) -> None:
         self.base_url: str = settings.DJANGO_BACKEND_URL
-        self.username: str = settings.API_USERNAME_TODO
-        self.password: str = settings.API_PASSWORD_TODO
 
-    async def get_token(self) -> str:
-        """
-        Получает токен аутентификации от бэкенда.
-
-        Returns:
-            str: Токен доступа.
-
-        Raises:
-            TokenError: Если не удалось получить токен.
-        """
-        try:
-            async with httpx.AsyncClient() as client:
-                response: httpx.Response = await client.post(
-                    f"{self.base_url}/api/token/",
-                    data={"username": self.username, "password": self.password}
-                )
-                response.raise_for_status()
-                token: str = response.json()["access"]
-                logger.info("Токен успешно получен")
-                return token
-        except httpx.HTTPStatusError as e:
-            logger.log_exception(f"Ошибка при получении токена: {e}")
-        except Exception as e:
-            logger.log_exception(f"Неожиданная ошибка при получении токена: {e}")
-
-    async def check_task_exists(self, task_id: int) -> bool:
+    async def check_task_exists(self, token: str, task_id: int) -> bool:
         """
         Проверяет существование задачи по её ID.
 
         Args:
+            token (str): Токен доступа.
             task_id (int): ID задачи для проверки.
 
         Returns:
@@ -63,7 +33,6 @@ class BackendClient:
             TaskError: Если произошла ошибка при проверке задачи.
         """
         try:
-            token: str = await self.get_token()
             async with httpx.AsyncClient() as client:
                 response: httpx.Response = await client.get(
                     f"{self.base_url}/api/tasks/{task_id}/",
@@ -72,16 +41,16 @@ class BackendClient:
                 exists: bool = response.status_code == 200
                 logger.info(f"Проверка существования задачи {task_id}: {'существует' if exists else 'не существует'}")
                 return exists
-        except TokenError as e:
-            logger.log_exception(f"Ошибка токена при проверке задачи {task_id}: {e}")
         except Exception as e:
             logger.log_exception(f"Ошибка при проверке существования задачи {task_id}: {e}")
+            raise TaskError(f"Ошибка при проверке существования задачи {task_id}: {e}")
 
-    async def get_task_details(self, task_id: int) -> Optional[Dict[str, Any]]:
+    async def get_task_details(self, token: str, task_id: int) -> Optional[Dict[str, Any]]:
         """
         Получает детали задачи по её ID.
 
         Args:
+            token (str): Токен доступа.
             task_id (int): ID задачи.
 
         Returns:
@@ -91,7 +60,6 @@ class BackendClient:
             TaskError: Если произошла ошибка при получении деталей задачи.
         """
         try:
-            token: str = await self.get_token()
             async with httpx.AsyncClient() as client:
                 response: httpx.Response = await client.get(
                     f"{self.base_url}/api/tasks/{task_id}/",
@@ -106,7 +74,7 @@ class BackendClient:
                 logger.warning(f"Задача {task_id} не найдена")
                 return None
             logger.log_exception(f"Ошибка при получении деталей задачи {task_id}: {e}")
-        except TokenError as e:
-            logger.log_exception(f"Ошибка токена при получении деталей задачи {task_id}: {e}")
+            raise TaskError(f"Ошибка при получении деталей задачи {task_id}: {e}")
         except Exception as e:
             logger.log_exception(f"Неожиданная ошибка при получении деталей задачи {task_id}: {e}")
+            raise TaskError(f"Неожиданная ошибка при получении деталей задачи {task_id}: {e}")

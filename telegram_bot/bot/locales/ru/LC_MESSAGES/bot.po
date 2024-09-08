@@ -1,0 +1,179 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ru\n"
+
+msgid "start_message"
+msgstr "👋 Привет! Я твой личный бот для управления списком дел. Что бы ты хотел сделать?"
+
+msgid "main_menu"
+msgstr "📋 Главное меню"
+
+msgid "view_tasks"
+msgstr "📊 Просмотреть задачи"
+
+msgid "create_task"
+msgstr "➕ Создать задачу"
+
+msgid "view_comments"
+msgstr "💬 Просмотреть комментарии"
+
+msgid "create_comment"
+msgstr "✍️ Создать комментарий"
+
+msgid "change_language"
+msgstr "🌐 Изменить язык"
+
+msgid "back"
+msgstr "🔙 Назад"
+
+msgid "task_list"
+msgstr "📝 Список задач:"
+
+msgid "no_tasks"
+msgstr "📭 У вас пока нет задач."
+
+msgid "enter_task_title"
+msgstr "📝 Пожалуйста, введите название задачи:"
+
+msgid "enter_task_description"
+msgstr "📄 Пожалуйста, введите описание задачи:"
+
+msgid "choose_category"
+msgstr "🏷️ Выберите категорию для задачи:"
+
+msgid "new_task_created"
+msgstr "✅ Новая задача создана: {title}"
+
+msgid "comment_menu"
+msgstr "💬 Меню комментариев"
+
+msgid "enter_task_id_for_comments"
+msgstr "🔢 Введите ID задачи для просмотра комментариев:"
+
+msgid "comment_list"
+msgstr "💬 Комментарии к задаче"
+
+msgid "task_title"
+msgstr "📃 Название задачи"
+
+msgid "task_description"
+msgstr "Описание"
+
+msgid "due_date"
+msgstr "📅 Крайний срок"
+
+msgid "status"
+msgstr "Статус"
+
+msgid "no_comments"
+msgstr "🤐 К этой задаче пока нет комментариев."
+
+msgid "enter_comment_text"
+msgstr "✍️ Введите ваш комментарий:"
+
+msgid "new_comment_created"
+msgstr "✅ Новый комментарий добавлен: {content}"
+
+msgid "choose_language"
+msgstr "🌐 Пожалуйста, выберите язык:"
+
+msgid "language_changed"
+msgstr "✅ Язык изменен на русский. 🇷🇺"
+
+msgid "user_not_found"
+msgstr "🔍 Пользователь не найден. Создаем новую учетную запись..."
+
+msgid "user_created"
+msgstr "🎉 Учетная запись пользователя успешно создана!"
+
+msgid "user_exists"
+msgstr "👤 Пользователь уже существует."
+
+msgid "authorization_error"
+msgstr "❌ Ошибка авторизации. Пожалуйста, попробуйте снова."
+
+msgid "please_authorize"
+msgstr "🔐 Пожалуйста, авторизуйтесь для продолжения."
+
+msgid "invalid_task_id"
+msgstr "❌ Неверный ID задачи. Пожалуйста, введите число."
+
+msgid "task_details"
+msgstr "📌 Детали задачи:"
+
+msgid "edit_task"
+msgstr "✏️ Редактировать задачу"
+
+msgid "delete_task"
+msgstr "🗑️ Удалить задачу"
+
+msgid "task_edited"
+msgstr "✅ Задача успешно отредактирована."
+
+msgid "task_deleted"
+msgstr "🗑️ Задача успешно удалена."
+
+msgid "confirm_delete"
+msgstr "❓ Вы уверены, что хотите удалить эту задачу?"
+
+msgid "yes"
+msgstr "✅ Да"
+
+msgid "no"
+msgstr "❌ Нет"
+
+msgid "operation_cancelled"
+msgstr "❌ Операция отменена."
+
+msgid "add_comment"
+msgstr "💬 Добавить комментарий"
+
+msgid "update_task"
+msgstr "✏️ Обновить задачу"
+
+msgid "complete_task"
+msgstr "✅ Завершить задачу"
+
+msgid "complete_and_delete_task"
+msgstr "🗑️ Завершить и удалить задачу"
+
+msgid "enter_comment"
+msgstr "✍️ Введите комментарий"
+
+msgid "enter_new_task_title"
+msgstr "📝 Введите новое название задачи"
+
+msgid "task_completed"
+msgstr "✅ Задача завершена"
+
+msgid "task_completed_and_deleted"
+msgstr "🗑️ Задача завершена и удалена"
+
+msgid "error_deleting_task"
+msgstr "❌ Ошибка при удалении задачи"
+
+msgid "comment_added"
+msgstr "💬 Комментарий добавлен"
+
+msgid "error_adding_comment"
+msgstr "❌ Ошибка при добавлении комментария"
+
+msgid "task_updated"
+msgstr "✅ Задача обновлена"
+
+msgid "error_updating_task"
+msgstr "❌ Ошибка при обновлении задачи"
+
+msgid "task_created_successfully"
+msgstr "✅ Задача успешно создана"
+
+msgid "task_creation_error"
+msgstr "❌ Ошибка при создании задачи"
+
+msgid "enter_task_due_date"
+msgstr "📅 Введите срок выполнения задачи"
+
+msgid "enter_task_categories"
+msgstr "🏷️ Введите категории задачи (через запятую)"

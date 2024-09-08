@@ -1,6 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app import models, schemas
 from app.database import engine, get_db
 from app.config import settings
@@ -34,14 +34,41 @@ async def startup() -> None:
         logger.log_exception(f"Ошибка при инициализации кэша Redis: {str(e)}")
         raise
 
+async def get_token(authorization: Optional[str] = Header(None)) -> str:
+    """
+    Извлекает токен из заголовка Authorization.
+
+    Args:
+        authorization (Optional[str]): Заголовок Authorization.
+
+    Returns:
+        str: Извлеченный токен.
+
+    Raises:
+        HTTPException: Если токен отсутствует или неверный формат заголовка.
+    """
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header is missing")
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Invalid authentication scheme")
+    if not token:
+        raise HTTPException(status_code=401, detail="Token is missing")
+    return token
+
 @app.post("/comments/", response_model=schemas.Comment)
-async def create_comment(comment: schemas.CommentCreate, db: Session = Depends(get_db)) -> schemas.Comment:
+async def create_comment(
+    comment: schemas.CommentCreate,
+    db: Session = Depends(get_db),
+    token: str = Depends(get_token)
+) -> schemas.Comment:
     """
     Создает новый комментарий.
 
     Args:
         comment (schemas.CommentCreate): Данные для создания комментария.
         db (Session): Сессия базы данных.
+        token (str): Токен авторизации.
 
     Returns:
         schemas.Comment: Созданный комментарий.
@@ -50,7 +77,7 @@ async def create_comment(comment: schemas.CommentCreate, db: Session = Depends(g
         HTTPException: Если задача не найдена или произошла ошибка при создании комментария.
     """
     try:
-        task_exists: bool = await backend_client.check_task_exists(comment.task_id)
+        task_exists: bool = await backend_client.check_task_exists(token, comment.task_id)
         if not task_exists:
             logger.warning(f"Попытка создать комментарий для несуществующей задачи {comment.task_id}")
             raise HTTPException(status_code=404, detail="Задача не найдена")
@@ -63,7 +90,12 @@ async def create_comment(comment: schemas.CommentCreate, db: Session = Depends(g
 
 @app.get("/comments/", response_model=List[schemas.Comment])
 @cache(expire=60)
-async def read_comments(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)) -> List[schemas.Comment]:
+async def read_comments(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    token: str = Depends(get_token)
+) -> List[schemas.Comment]:
     """
     Получает список комментариев с пагинацией.
 
@@ -71,6 +103,7 @@ async def read_comments(skip: int = 0, limit: int = 100, db: Session = Depends(g
         skip (int): Количество пропускаемых записей.
         limit (int): Максимальное количество возвращаемых записей.
         db (Session): Сессия базы данных.
+        token (str): Токен авторизации.
 
     Returns:
         List[schemas.Comment]: Список комментариев.
@@ -85,13 +118,18 @@ async def read_comments(skip: int = 0, limit: int = 100, db: Session = Depends(g
 
 @app.get("/comments/{comment_id}", response_model=schemas.Comment)
 @cache(expire=60)
-async def read_comment(comment_id: int, db: Session = Depends(get_db)) -> schemas.Comment:
+async def read_comment(
+    comment_id: int,
+    db: Session = Depends(get_db),
+    token: str = Depends(get_token)
+) -> schemas.Comment:
     """
     Получает комментарий по его ID.
 
     Args:
         comment_id (int): ID комментария.
         db (Session): Сессия базы данных.
+        token (str): Токен авторизации.
 
     Returns:
         schemas.Comment: Комментарий.
@@ -107,14 +145,18 @@ async def read_comment(comment_id: int, db: Session = Depends(get_db)) -> schema
         logger.info(f"Получен комментарий с ID {comment_id}")
         return db_comment
     except HTTPException:
-        # Пробрасываем HTTPException дальше без изменений
         raise
     except Exception as e:
         logger.log_exception(f"Ошибка при получении комментария с ID {comment_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера")
 
 @app.put("/comments/{comment_id}", response_model=schemas.Comment)
-async def update_comment(comment_id: int, comment: schemas.CommentCreate, db: Session = Depends(get_db)) -> schemas.Comment:
+async def update_comment(
+    comment_id: int,
+    comment: schemas.CommentCreate,
+    db: Session = Depends(get_db),
+    token: str = Depends(get_token)
+) -> schemas.Comment:
     """
     Обновляет существующий комментарий.
 
@@ -122,6 +164,7 @@ async def update_comment(comment_id: int, comment: schemas.CommentCreate, db: Se
         comment_id (int): ID обновляемого комментария.
         comment (schemas.CommentCreate): Новые данные комментария.
         db (Session): Сессия базы данных.
+        token (str): Токен авторизации.
 
     Returns:
         schemas.Comment: Обновленный комментарий.
@@ -134,7 +177,7 @@ async def update_comment(comment_id: int, comment: schemas.CommentCreate, db: Se
         if db_comment is None:
             logger.warning(f"Попытка обновить несуществующий комментарий с ID {comment_id}")
             raise HTTPException(status_code=404, detail="Комментарий не найден")
-        task_exists = await backend_client.check_task_exists(comment.task_id)
+        task_exists = await backend_client.check_task_exists(token, comment.task_id)
         if not task_exists:
             logger.warning(f"Попытка обновить комментарий для несуществующей задачи {comment.task_id}")
             raise HTTPException(status_code=404, detail="Задача не найдена")
@@ -146,13 +189,18 @@ async def update_comment(comment_id: int, comment: schemas.CommentCreate, db: Se
         raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера")
 
 @app.delete("/comments/{comment_id}", response_model=schemas.Comment)
-async def delete_comment(comment_id: int, db: Session = Depends(get_db)) -> schemas.Comment:
+async def delete_comment(
+    comment_id: int,
+    db: Session = Depends(get_db),
+    token: str = Depends(get_token)
+) -> schemas.Comment:
     """
     Удаляет комментарий.
 
     Args:
         comment_id (int): ID удаляемого комментария.
         db (Session): Сессия базы данных.
+        token (str): Токен авторизации.
 
     Returns:
         schemas.Comment: Удаленный комментарий.
@@ -173,13 +221,18 @@ async def delete_comment(comment_id: int, db: Session = Depends(get_db)) -> sche
 
 @app.get("/tasks/{task_id}/comments", response_model=List[schemas.Comment])
 @cache(expire=60)
-async def read_task_comments(task_id: str, db: Session = Depends(get_db)) -> List[schemas.Comment]:
+async def read_task_comments(
+    task_id: str,
+    db: Session = Depends(get_db),
+    token: str = Depends(get_token)
+) -> List[schemas.Comment]:
     """
     Получает все комментарии для заданной задачи.
 
     Args:
-        task_id (int): ID задачи.
+        task_id (str): ID задачи.
         db (Session): Сессия базы данных.
+        token (str): Токен авторизации.
 
     Returns:
         List[schemas.Comment]: Список комментариев для заданной задачи.
@@ -188,7 +241,7 @@ async def read_task_comments(task_id: str, db: Session = Depends(get_db)) -> Lis
         HTTPException: Если задача не найдена.
     """
     try:
-        task_exists: bool = await backend_client.check_task_exists(task_id)
+        task_exists: bool = await backend_client.check_task_exists(token, task_id)
         if not task_exists:
             logger.warning(f"Попытка получить комментарии для несуществующей задачи с ID {task_id}")
             raise HTTPException(status_code=404, detail="Задача не найдена")

@@ -111,20 +111,23 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
         except Exception as e:
             logger.log_exception(f"Неожиданная ошибка при обновлении задачи: {str(e)}")
 
+
 class UserSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели User.
     """
     password = serializers.CharField(write_only=True, required=False)
+    id = serializers.IntegerField(required=False)  # Добавляем поле id
 
     class Meta:
         model = User
         fields: List[str] = ['id', 'username', 'email', 'password', 'is_active', 'date_joined', 'last_login']
-        read_only_fields: List[str] = ['id', 'is_staff', 'is_superuser', 'date_joined', 'last_login']
+        read_only_fields: List[str] = ['is_staff', 'is_superuser', 'date_joined', 'last_login']
 
     def create(self, validated_data: Dict[str, Any]) -> User:
         """
         Создает нового обычного пользователя.
+        Позволяет задать ID пользователя, если он предоставлен.
 
         Args:
             validated_data (Dict[str, Any]): Валидированные данные для создания пользователя.
@@ -137,14 +140,23 @@ class UserSerializer(serializers.ModelSerializer):
         """
         try:
             password = validated_data.pop('password')
-            user = User.objects.create_user(**validated_data)
+            user_id = validated_data.pop('id', None)
+
+            if user_id:
+                # Проверяем, не существует ли уже пользователь с таким ID
+                if User.objects.filter(id=user_id).exists():
+                    raise ValidationError(f"Пользователь с ID {user_id} уже существует")
+
+                user = User.objects.create_user(id=user_id, **validated_data)
+            else:
+                user = User.objects.create_user(**validated_data)
+
             user.set_password(password)
             user.save()
-            logger.info(f"Создан новый пользователь: {user.username}")
+            logger.info(f"Создан новый пользователь: {user.username} с ID {user.id}")
             return user
         except ValidationError as e:
             logger.log_exception(f"Ошибка валидации при создании пользователя: {str(e)}")
-
         except Exception as e:
             logger.log_exception(f"Неожиданная ошибка при создании пользователя: {str(e)}")
 
