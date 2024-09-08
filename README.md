@@ -38,9 +38,35 @@ fastapi_microservice/
 Структура+
 Типизация-
 Контейнер+
-Тестирование-
+Тестирование+
 Отчёт об уязвимостях+
-Документация-
-Исключения-
-Логирование-
+Документация+
+Исключения+
+Логирование+
 ООП+
+telegram_bot/
+├── bot/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── config.py
+│   ├── handlers/
+│   │   ├── __init__.py
+│   │   ├── start.py
+│   │   ├── tasks.py
+│   │   ├── comments.py
+│   ├── keyboards/
+│   │   ├── __init__.py
+│   │   ├── reply.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── django_api.py
+│   │   ├── fastapi_api.py
+│   ├── locales/
+│   │   ├── en/
+│   │   │   ├── LC_MESSAGES/
+│   │   │       ├── bot.po
+│   │   ├── ru/
+│   │   │   ├── LC_MESSAGES/
+│   │   │       ├── bot.po
+├── Dockerfile
+├── requirements.txt
