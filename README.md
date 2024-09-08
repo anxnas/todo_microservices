@@ -21,17 +21,26 @@ django_backend/
 Тестирование+
 Отчёт об уязвимостях+
 Документация+
-Исключения+  ___    Применить к token.py
-Логирование+ _ Изменить 
+Исключения+
+Логирование+
 ООП+
 fastapi_microservice/
 ├── app/
-│   ├── __init__.py-
-│   ├── main.py-
-│   ├── models.py-
-│   ├── schemas.py-
-│   ├── crud.py-
-│   ├── database.py-
-│   ├── config.py-
-├── Dockerfile
-├── requirements.txt
+│   ├── __init__.py+
+│   ├── main.py+
+│   ├── models.py+
+│   ├── schemas.py+
+│   ├── crud.py+
+│   ├── database.py+
+│   ├── config.py+
+├── Dockerfile+
+├── requirements.txt+
+Структура+
+Типизация-
+Контейнер+
+Тестирование-
+Отчёт об уязвимостях+
+Документация-
+Исключения-
+Логирование-
+ООП+

@@ -1,9 +1,8 @@
 import httpx
 from typing import Optional, Dict, Any
-from .config import settings
-from .log_config import get_logger
+from app.config import settings
 
-logger = get_logger("backend_client")
+logger = settings.LOGGER.get_logger('backend_client')
 
 class BackendClientError(Exception):
     """Базовый класс для исключений в этом модуле."""

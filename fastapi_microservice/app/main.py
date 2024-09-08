@@ -1,18 +1,17 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from . import models, schemas
-from .database import engine, get_db
-from .config import settings
-from .crud import CommentCRUD
-from .backend_client import BackendClient
-from .log_config import get_logger
+from app import models, schemas
+from app.database import engine, get_db
+from app.config import settings
+from app.crud import CommentCRUD
+from app.backend_client import BackendClient
 import aioredis
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 
-logger = get_logger("main")
+logger = settings.LOGGER.get_logger(__name__)
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -98,7 +97,7 @@ async def read_comment(comment_id: int, db: Session = Depends(get_db)) -> schema
         schemas.Comment: Комментарий.
 
     Raises:
-        HTTPException: Если комментарий не найден.
+        HTTPException: Если комментарий не найден или произошла внутренняя ошибка.
     """
     try:
         db_comment = comment_crud.get_comment(db, comment_id=comment_id)
@@ -107,6 +106,9 @@ async def read_comment(comment_id: int, db: Session = Depends(get_db)) -> schema
             raise HTTPException(status_code=404, detail="Комментарий не найден")
         logger.info(f"Получен комментарий с ID {comment_id}")
         return db_comment
+    except HTTPException:
+        # Пробрасываем HTTPException дальше без изменений
+        raise
     except Exception as e:
         logger.log_exception(f"Ошибка при получении комментария с ID {comment_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера")
@@ -171,7 +173,7 @@ async def delete_comment(comment_id: int, db: Session = Depends(get_db)) -> sche
 
 @app.get("/tasks/{task_id}/comments", response_model=List[schemas.Comment])
 @cache(expire=60)
-async def read_task_comments(task_id: int, db: Session = Depends(get_db)) -> List[schemas.Comment]:
+async def read_task_comments(task_id: str, db: Session = Depends(get_db)) -> List[schemas.Comment]:
     """
     Получает все комментарии для заданной задачи.
 

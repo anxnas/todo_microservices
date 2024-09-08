@@ -2,7 +2,7 @@ from rest_framework import serializers
 from typing import Dict, Any, List
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
-from .models import Task, Category
+from tasks.models import Task, Category
 from django.conf import settings
 
 logger = settings.LOGGER.get_logger('serializers')

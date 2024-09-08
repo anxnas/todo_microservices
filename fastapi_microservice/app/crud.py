@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Optional
-from . import models, schemas
-from log_config import get_logger
+from app import models, schemas
+from app.config import settings
 
-logger = get_logger("crud")
+logger = settings.LOGGER.get_logger('crud')
 
 class CommentCRUD:
     def get_comment(self, db: Session, comment_id: int) -> Optional[models.Comment]:

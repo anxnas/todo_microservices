@@ -6,8 +6,8 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
-from .models import Task, Category
-from .serializers import TaskCreateSerializer, TaskUpdateSerializer, CategorySerializer, UserSerializer, PublicUserSerializer
+from tasks.models import Task, Category
+from tasks.serializers import TaskCreateSerializer, TaskUpdateSerializer, CategorySerializer, UserSerializer, PublicUserSerializer
 
 logger = settings.LOGGER.get_logger('views')
 
