@@ -21,6 +21,12 @@ class MainSG(StatesGroup):
     create_category = State()
     comments = State()
     create_comment = State()
+    assign_categories = State()
+    update_task = State()
+    complete_and_delete_task = State()
+    update_task_title = State()
+    update_task_description = State()
+    update_task_due_date = State()
 
 async def on_task_selected(c, widget, manager, item_id):
     manager.dialog_data["selected_task_id"] = str(item_id)
@@ -93,14 +99,19 @@ async def get_task_details(dialog_manager, **kwargs):
         due_date = datetime.fromisoformat(task['due_date'])
         task['due_date'] = due_date.strftime('%d.%m.%Y')
 
+    categories = task.get('categories', [])
+    categories_names = ", ".join([category['name'] for category in categories])
+
     return {
         "task": task,
-        "assign_categories_emoji": localization.get_text("assign_categories_emoji", locale),
+        "categories": categories_names,
+        "assign_categories_title": localization.get_text("assign_categories_title", locale),
         "update_task_emoji": localization.get_text("update_task_emoji", locale),
         "complete_and_delete_task_emoji": localization.get_text("complete_and_delete_task_emoji", locale),
         "task_details": localization.get_text("task_details", locale),
         "task_description": localization.get_text("task_description", locale),
         "task_due_date": localization.get_text("task_due_date", locale),
+        "task_categories": localization.get_text("categories", locale),
         "comments": localization.get_text("comments", locale),
         "back": localization.get_text("back", locale),
     }
@@ -126,6 +137,21 @@ async def get_categories(dialog_manager, **kwargs):
         "back": localization.get_text("back", locale),
     }
 
+
+async def get_categories_for_assignment(dialog_manager: DialogManager, **kwargs):
+    user_token = dialog_manager.dialog_data.get("user_token")
+    categories = await api_service.get_categories(user_token)
+    locale = dialog_manager.dialog_data.get("locale", "ru")
+
+    # Сохраняем все категории в dialog_data для использования в on_category_selected
+    dialog_manager.dialog_data["all_categories"] = categories
+
+    return {
+        "categories": categories,
+        "assign_categories_title": localization.get_text("assign_categories_title", locale),
+        "save": localization.get_text("save", locale),
+        "back": localization.get_text("back", locale),
+    }
 
 async def get_comments(dialog_manager, **kwargs):
     user_token = dialog_manager.dialog_data.get("user_token")
@@ -166,6 +192,56 @@ async def get_create_category(dialog_manager: DialogManager, **kwargs):
         "back": localization.get_text("back", locale),
     }
 
+async def get_create_task(dialog_manager: DialogManager, **kwargs):
+    locale = dialog_manager.dialog_data.get("locale", "ru")
+    return {
+        "create_task": localization.get_text("create_task", locale),
+        "enter_task_name": localization.get_text("enter_task_name", locale),
+        "back": localization.get_text("back", locale),
+    }
+
+async def get_task_description(dialog_manager: DialogManager, **kwargs):
+    locale = dialog_manager.dialog_data.get("locale", "ru")
+    return {
+        "enter_task_description": localization.get_text("enter_task_description", locale),
+        "back": localization.get_text("back", locale),
+    }
+
+async def get_task_due_date(dialog_manager: DialogManager, **kwargs):
+    locale = dialog_manager.dialog_data.get("locale", "ru")
+    return {
+        "enter_task_due_date": localization.get_text("enter_task_due_date", locale),
+        "back": localization.get_text("back", locale),
+    }
+
+async def get_task_categories(dialog_manager: DialogManager, **kwargs):
+    locale = dialog_manager.dialog_data.get("locale", "ru")
+    return {
+        "enter_task_categories": localization.get_text("enter_task_categories", locale),
+        "back": localization.get_text("back", locale),
+    }
+
+async def get_update_title(dialog_manager: DialogManager, **kwargs):
+    locale = dialog_manager.dialog_data.get("locale", "ru")
+    return {
+        "enter_new_title": localization.get_text("enter_new_title", locale),
+        "back": localization.get_text("back", locale),
+    }
+
+async def get_update_description(dialog_manager: DialogManager, **kwargs):
+    locale = dialog_manager.dialog_data.get("locale", "ru")
+    return {
+        "enter_new_description": localization.get_text("enter_new_description", locale),
+        "back": localization.get_text("back", locale),
+    }
+
+async def get_update_due_date(dialog_manager: DialogManager, **kwargs):
+    locale = dialog_manager.dialog_data.get("locale", "ru")
+    return {
+        "enter_new_due_date": localization.get_text("enter_new_due_date", locale),
+        "back": localization.get_text("back", locale),
+    }
+
 async def on_delete_comment(c, widget: Button, manager: DialogManager, item_id: str):
     user_token = manager.dialog_data.get("user_token")
     success = await api_service.delete_comment(user_token, item_id)
@@ -195,7 +271,7 @@ async def on_delete_comment(c, widget: Button, manager: DialogManager, item_id: 
     # Перерисовываем текущее окно
     return await manager.switch_to(MainSG.comments)
 
-async def on_category_selected(c, widget: Button, manager: DialogManager, item_id: str):
+async def on_category_del(c, widget: Button, manager: DialogManager, item_id: str):
     user_token = manager.dialog_data.get("user_token")
     success = await api_service.delete_category(user_token, item_id)
     locale = manager.dialog_data.get("locale", "ru")
@@ -209,13 +285,41 @@ async def on_category_selected(c, widget: Button, manager: DialogManager, item_i
     await manager.update({"categories": await api_service.get_categories(user_token)})
 
 
+async def on_category_selected(c, widget: Button, manager: DialogManager, item_id: str):
+    selected_categories = manager.dialog_data.get("selected_categories", [])
+    all_categories = manager.dialog_data.get("all_categories", [])
+
+    # Находим категорию по id
+    category = next((cat for cat in all_categories if cat['id'] == item_id), None)
+
+    if category:
+        existing_category = next((cat for cat in selected_categories if cat['id'] == item_id), None)
+        if existing_category:
+            selected_categories.remove(existing_category)
+            await c.answer("❌")
+        else:
+            selected_categories.append({'name': category['name'], 'id': category['id']})
+            await c.answer("✅")
+        manager.dialog_data["selected_categories"] = selected_categories
+
+async def on_save_categories(c, widget: Button, manager: DialogManager):
+    user_token = manager.dialog_data.get("user_token")
+    task_id = manager.dialog_data.get("selected_task_id")
+    locale = manager.dialog_data.get("locale", "ru")
+    selected_categories = manager.dialog_data.get("selected_categories", [])
+    success = await api_service.update_task_categories(user_token, task_id, selected_categories)
+    if success:
+        await manager.event.answer(localization.get_text("categories_updated", locale))
+    else:
+        await manager.event.answer(localization.get_text("error_updating_categories", locale))
+    await manager.switch_to(MainSG.task_details)
+
 async def on_create_task(message, message_input, manager):
     user_token = manager.dialog_data.get("user_token")
     title = message.text
     locale = manager.dialog_data.get("locale", "ru")
 
     manager.dialog_data["task_title"] = title
-    await manager.answer(localization.get_text("enter_task_description", locale))
     await manager.switch_to(MainSG.create_task_description)
 
 
@@ -224,7 +328,6 @@ async def on_task_description(message, message_input, manager):
     manager.dialog_data["task_description"] = description
     locale = manager.dialog_data.get("locale", "ru")
 
-    await manager.answer(localization.get_text("enter_task_due_date", locale))
     await manager.switch_to(MainSG.create_task_due_date)
 
 
@@ -233,9 +336,40 @@ async def on_task_due_date(message, message_input, manager):
     manager.dialog_data["task_due_date"] = due_date
     locale = manager.dialog_data.get("locale", "ru")
 
-    await manager.answer(localization.get_text("enter_task_categories", locale))
     await manager.switch_to(MainSG.create_task_categories)
 
+async def on_update_title(message, message_input: MessageInput, manager: DialogManager):
+    user_token = manager.dialog_data.get("user_token")
+    task_id = manager.dialog_data.get("selected_task_id")
+    new_title = message.text
+    success = await api_service.update_task(user_token, task_id, title=new_title)
+    if success:
+        await manager.switch_to(MainSG.update_task_description)
+    else:
+        await message.answer(localization.get_text("error_updating_task", manager.dialog_data.get("locale", "ru")))
+
+async def on_update_description(message, message_input: MessageInput, manager: DialogManager):
+    user_token = manager.dialog_data.get("user_token")
+    task_id = manager.dialog_data.get("selected_task_id")
+    new_description = message.text
+    success = await api_service.update_task(user_token, task_id, description=new_description)
+    if success:
+        await manager.switch_to(MainSG.update_task_due_date)
+    else:
+        await message.answer(localization.get_text("error_updating_task", manager.dialog_data.get("locale", "ru")))
+
+async def on_update_due_date(message, message_input: MessageInput, manager: DialogManager):
+    user_token = manager.dialog_data.get("user_token")
+    task_id = manager.dialog_data.get("selected_task_id")
+    new_due_date = message.text
+    # Здесь можно добавить проверку формата даты
+    success = await api_service.update_task(user_token, task_id, due_date=new_due_date)
+    if success:
+        await message.answer(
+            localization.get_text("succes_updating_task", manager.dialog_data.get("locale", "ru")))
+        await manager.switch_to(MainSG.task_details)
+    else:
+        await message.answer(localization.get_text("error_updating_task", manager.dialog_data.get("locale", "ru")))
 
 async def on_task_categories(message, message_input, manager):
     categories = [cat.strip() for cat in message.text.split(',')]
@@ -248,10 +382,10 @@ async def on_task_categories(message, message_input, manager):
     task = await api_service.create_task(user_token, title, description, due_date, categories)
 
     if task:
-        await manager.answer(localization.get_text("task_created", locale))
+        await manager.event.answer(localization.get_text("task_created", locale))
         await manager.switch_to(MainSG.tasks)
     else:
-        await manager.answer(localization.get_text("error_creating_task", locale))
+        await manager.event.answer(localization.get_text("error_creating_task", locale))
 
 
 async def on_create_category(message, message_input, manager):
@@ -261,10 +395,10 @@ async def on_create_category(message, message_input, manager):
     locale = manager.dialog_data.get("locale", "ru")
 
     if category:
-        await manager.answer(localization.get_text("category_created", locale))
+        await manager.event.answer(localization.get_text("category_created", locale))
         await manager.switch_to(MainSG.categories)
     else:
-        await manager.answer(localization.get_text("error_creating_category", locale))
+        await manager.event.answer(localization.get_text("error_creating_category", locale))
 
 
 async def on_create_comment(message, message_input, manager):
@@ -279,7 +413,21 @@ async def on_create_comment(message, message_input, manager):
         await manager.event.answer(localization.get_text("comment_created", locale))
         await manager.switch_to(MainSG.comments)
     else:
-        await manager.answer(localization.get_text("error_creating_comment", locale))
+        await manager.event.answer(localization.get_text("error_creating_comment", locale))
+
+
+async def on_complete_and_delete_task(c, widget: Button, manager: DialogManager):
+    user_token = manager.dialog_data.get("user_token")
+    task_id = manager.dialog_data.get("selected_task_id")
+    locale = manager.dialog_data.get("locale", "ru")
+
+    success = await api_service.complete_and_delete_task(user_token, task_id)
+
+    if success:
+        await c.answer(localization.get_text("task_completed_and_deleted", locale), show_alert=True)
+        await manager.switch_to(MainSG.tasks)
+    else:
+        await c.answer(localization.get_text("error_completing_and_deleting_task", locale), show_alert=True)
 
 
 main_dialog = Dialog(
@@ -322,35 +470,40 @@ main_dialog = Dialog(
         Format("{create_task}"),
         Format("{enter_task_name}"),
         MessageInput(on_create_task),
-        Back(Format("{back}")),
-        state=MainSG.create_task
+        Button(Format("{back}"), id="back", on_click=lambda c, b, m: m.switch_to(MainSG.tasks)),
+        state=MainSG.create_task,
+        getter=get_create_task
     ),
     Window(
         Format("{enter_task_description}"),
         MessageInput(on_task_description),
-        Back(Format("{back}")),
-        state=MainSG.create_task_description
+        Button(Format("{back}"), id="back", on_click=lambda c, b, m: m.switch_to(MainSG.tasks)),
+        state=MainSG.create_task_description,
+        getter=get_task_description
     ),
     Window(
         Format("{enter_task_due_date}"),
         MessageInput(on_task_due_date),
-        Back(Format("{back}")),
-        state=MainSG.create_task_due_date
+        Button(Format("{back}"), id="back", on_click=lambda c, b, m: m.switch_to(MainSG.tasks)),
+        state=MainSG.create_task_due_date,
+        getter=get_task_due_date
     ),
     Window(
         Format("{enter_task_categories}"),
         MessageInput(on_task_categories),
-        Back(Format("{back}")),
-        state=MainSG.create_task_categories
+        Button(Format("{back}"), id="back", on_click=lambda c, b, m: m.switch_to(MainSG.tasks)),
+        state=MainSG.create_task_categories,
+        getter=get_task_categories
     ),
     Window(
         Format("{task_details}: {task[title]}"),
         Format("{task_description}: {task[description]}"),
         Format("{task_due_date}: {task[due_date]}"),
+        Format("{task_categories}: {categories}"),
         Button(Format("{comments}"), id="comments", on_click=lambda c, b, m: m.switch_to(MainSG.comments)),
-        Button(Format("{assign_categories_emoji}"), id="assign_categories_emoji", on_click=lambda c, b, m: m.switch_to(MainSG.comments)),
-        Button(Format("{update_task_emoji}"), id="update_task_emoji", on_click=lambda c, b, m: m.switch_to(MainSG.comments)),
-        Button(Format("{complete_and_delete_task_emoji}"), id="complete_and_delete_task_emoji", on_click=lambda c, b, m: m.switch_to(MainSG.comments)),
+        Button(Format("{assign_categories_title}"), id="assign_categories_title", on_click=lambda c, b, m: m.switch_to(MainSG.assign_categories)),
+        Button(Format("{update_task_emoji}"), id="update_task_emoji", on_click=lambda c, b, m: m.switch_to(MainSG.update_task_title)),
+        Button(Format("{complete_and_delete_task_emoji}"), id="complete_and_delete_task_emoji", on_click=on_complete_and_delete_task),
         Button(Format("{back}"), id="back", on_click=lambda c, b, m: m.switch_to(MainSG.tasks)),
         getter=get_task_details,
         state=MainSG.task_details
@@ -364,7 +517,7 @@ main_dialog = Dialog(
                 id="categories_select",
                 item_id_getter=lambda x: x["id"],
                 items="categories",
-                on_click=on_category_selected
+                on_click=on_category_del
             ),
             width=1
         ),
@@ -378,7 +531,7 @@ main_dialog = Dialog(
         Format("{create_category}"),
         Format("{enter_category_name}"),
         MessageInput(on_create_category),
-        Back(Format("{back}")),
+        Button(Format("{back}"), id="back", on_click=lambda c, b, m: m.switch_to(MainSG.categories)),
         state=MainSG.create_category,
         getter=get_create_category
     ),
@@ -408,5 +561,43 @@ main_dialog = Dialog(
         Back(Format("{back}")),
         getter=get_create_comment,
         state=MainSG.create_comment
+    ),
+    Window(
+        Format("{assign_categories_title}"),
+        Group(
+            Select(
+                Format("{item[name]}"),
+                id="categories_select",
+                item_id_getter=lambda x: x["id"],
+                items="categories",
+                on_click=on_category_selected,
+            ),
+            width=1
+        ),
+        Button(Format("{save}"), id="save_categories", on_click=on_save_categories),
+        Button(Format("{back}"), id="back", on_click=lambda c, b, m: m.switch_to(MainSG.task_details)),
+        state=MainSG.assign_categories,
+        getter=get_categories_for_assignment
+    ),
+    Window(
+        Format("{enter_new_title}"),
+        MessageInput(on_update_title),
+        Button(Format("{back}"), id="back", on_click=lambda c, b, m: m.switch_to(MainSG.task_details)),
+        state=MainSG.update_task_title,
+        getter=get_update_title
+    ),
+    Window(
+        Format("{enter_new_description}"),
+        MessageInput(on_update_description),
+        Button(Format("{back}"), id="back", on_click=lambda c, b, m: m.switch_to(MainSG.task_details)),
+        state=MainSG.update_task_description,
+        getter=get_update_description
+    ),
+    Window(
+        Format("{enter_new_due_date}"),
+        MessageInput(on_update_due_date),
+        Button(Format("{back}"), id="back", on_click=lambda c, b, m: m.switch_to(MainSG.task_details)),
+        state=MainSG.update_task_due_date,
+        getter=get_update_due_date
     )
 )

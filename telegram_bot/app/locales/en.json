@@ -37,5 +37,22 @@
   "complete_and_delete_task_emoji": "🗑️✅ Complete and delete task",
   "delete_category": "Delete category",
   "category_deleted": "Category successfully deleted",
-  "error_deleting_category": "Error deleting category"
+  "error_deleting_category": "Error deleting category",
+  "save": "💾 Save",
+  "update_task_title": "✏️ Update Task",
+  "current_title": "Current title",
+  "current_description": "Current description",
+  "current_due_date": "Current due date",
+  "update_title": "Update title",
+  "update_description": "Update description",
+  "update_due_date": "Update due date",
+  "categories_updated": "✅ Categories successfully updated",
+  "error_updating_categories": "❌ Error updating categories",
+  "task_completed_and_deleted": "✅ Task completed and deleted",
+  "error_completing_and_deleting_task": "❌ Error completing and deleting task",
+  "enter_new_title": "Enter new task title:",
+  "enter_new_description": "Enter new task description:",
+  "enter_new_due_date": "Enter new task due date (DD.MM.YYYY):",
+  "error_updating_task": "❌ Error updating task",
+  "succes_updating_task": "✅ Task was successfully updated"
 }

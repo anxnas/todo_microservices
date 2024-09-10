@@ -1,4 +1,5 @@
 import aiohttp
+from typing import List
 from config import config
 from models.user import User
 
@@ -118,6 +119,35 @@ class APIService:
         async with self.session.delete(f"{self.fastapi_url}/comments/{comment_id}/",
                                        headers=self.get_user_headers(user_token)) as response:
             return response.status == 200
+
+    async def update_task_categories(self, user_token: str, task_id: str, category: List[str]) -> bool:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        data = {"categories": category}
+        async with aiohttp.ClientSession() as session:
+            async with session.put(f"{self.base_url}/tasks/{task_id}/", headers=headers,
+                                   json=data) as response:
+                if response.status == 200:
+                    return True
+                else:
+                    return False
+
+    async def update_task(self, user_token: str, task_id: str, **kwargs) -> bool:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        async with aiohttp.ClientSession() as session:
+            async with session.put(f"{self.base_url}/tasks/{task_id}/", headers=headers, json=kwargs) as response:
+                if response.status == 200:
+                    return True
+                else:
+                    return False
+
+    async def complete_and_delete_task(self, user_token: str, task_id: str) -> bool:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        async with aiohttp.ClientSession() as session:
+            async with session.delete(f"{self.base_url}/tasks/{task_id}/", headers=headers) as response:
+                if response.status == 204:
+                    return True
+                else:
+                    return False
 
     def get_admin_headers(self):
         return {"Authorization": f"Bearer {self.admin_token}"}
