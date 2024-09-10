@@ -44,29 +44,27 @@ fastapi_microservice/
 Исключения+
 Логирование+
 ООП+
-telegram_bot/
-├── bot/
-│   ├── __init__.py
-│   ├── main.py
-│   ├── config.py
-│   ├── handlers/
-│   │   ├── __init__.py
-│   │   ├── start.py
-│   │   ├── tasks.py
-│   │   ├── comments.py
-│   ├── keyboards/
-│   │   ├── __init__.py
-│   │   ├── reply.py
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── django_api.py
-│   │   ├── fastapi_api.py
-│   ├── locales/
-│   │   ├── en/
-│   │   │   ├── LC_MESSAGES/
-│   │   │       ├── bot.po
-│   │   ├── ru/
-│   │   │   ├── LC_MESSAGES/
-│   │   │       ├── bot.po
-├── Dockerfile
-├── requirements.txt
+/project
+|-- /app
+|   |-- /components
+|   |   |-- __init__.py +
+|   |   |-- bot.py
+|   |   |-- handlers.py
+|   |   |-- dialogs.py
+|   |-- /models
+|   |   |-- __init__.py +
+|   |   |-- user.py +
+|   |-- /services
+|   |   |-- __init__.py +
+|   |   |-- api.py +
+|   |-- /utils
+|   |   |-- __init__.py +
+|   |   |-- localization.py +
+|   |-- __init__.py +
+|   |-- config.py +
+|   |-- main.py
+|-- /tests
+|   |-- test_bot.py
+|   |-- test_api.py
+|-- Dockerfile
+|-- requirements.txt
