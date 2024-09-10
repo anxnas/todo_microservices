@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 from datetime import timedelta
 from profi_log import MasterLogger
@@ -29,6 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'tasks',
+    'background_task',
 ]
 
 MIDDLEWARE = [
@@ -139,3 +141,19 @@ SIMPLE_JWT = {
 
 LOGGER = MasterLogger("logs/register.log", level='INFO')
 LOGGER_CONSOLE = LOGGER.setup_colored_console_logging()
+
+# Настройки для отслеживания выполненных задач
+TIME_COMPLETED_TASK = True
+TIME_COMPLETED_TASK_INTERVAL = 86400  # 24 часа в секундах
+
+# Настройки для отслеживания просроченных задач
+TIME_DUE_TASK = True
+TIME_DUE_TASK_INTERVAL = 3600  # 1 час в секундах
+
+RUNNING_TESTS = False  # Это будет True, когда запускаются тесты
+
+# Добавьте эту строку в конец settings.py
+if 'test' in sys.argv:
+    RUNNING_TESTS = True
+
+COMMENTS_SERVICE_URL = "http://127.0.0.1:8080"

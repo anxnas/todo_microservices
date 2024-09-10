@@ -11,7 +11,8 @@ class Settings:
     POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
     POSTGRES_DB: str = os.getenv("POSTGRES_DB_TODO", "todo_db")
     DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}:{POSTGRES_PORT}/{POSTGRES_DB}"
-    DJANGO_BACKEND_URL: str = os.getenv("DJANGO_BACKEND_URL", "http://localhost:8000")
+    DJANGO_BACKEND_URL: str = os.getenv("DJANGO_URL", "http://localhost:8000")
+    FASTAPI_PORT: int = int(os.getenv("FASTAPI_PORT", "8080"))
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379")
     API_USERNAME_TODO: str = os.getenv("API_USERNAME_TODO", "admin")
     API_PASSWORD_TODO: str = os.getenv("API_PASSWORD_TODO", "12345678")

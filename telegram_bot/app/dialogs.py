@@ -10,6 +10,29 @@ from typing import List, Dict, Any, Optional
 from aiogram.types import CallbackQuery, Message
 
 class MainSG(StatesGroup):
+    """
+    Определяет состояния для основного диалога.
+
+    Attributes:
+        language_select (State): Состояние выбора языка.
+        main (State): Главное состояние.
+        tasks (State): Состояние списка задач.
+        create_task (State): Состояние создания задачи.
+        create_task_description (State): Состояние добавления описания задачи.
+        create_task_due_date (State): Состояние добавления срока выполнения задачи.
+        create_task_categories (State): Состояние добавления категорий задачи.
+        task_details (State): Состояние просмотра деталей задачи.
+        categories (State): Состояние списка категорий.
+        create_category (State): Состояние создания категории.
+        comments (State): Состояние списка комментариев.
+        create_comment (State): Состояние создания комментария.
+        assign_categories (State): Состояние назначения категорий.
+        update_task (State): Состояние обновления задачи.
+        complete_and_delete_task (State): Состояние завершения и удаления задачи.
+        update_task_title (State): Состояние обновления заголовка задачи.
+        update_task_description (State): Состояние обновления описания задачи.
+        update_task_due_date (State): Состояние обновления срока выполнения задачи.
+    """
     language_select = State()
     main = State()
     tasks = State()
@@ -30,16 +53,49 @@ class MainSG(StatesGroup):
     update_task_due_date = State()
 
 async def on_task_selected(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str) -> None:
+    """
+    Обработчик выбора задачи.
+
+    Args:
+        c (CallbackQuery): Объект обратного вызова.
+        widget (Any): Виджет, вызвавший обработчик.
+        manager (DialogManager): Менеджер диалога.
+        item_id (str): ID выбранной задачи.
+
+    Returns:
+        None
+    """
     manager.dialog_data["selected_task_id"] = str(item_id)
     await manager.switch_to(MainSG.task_details)
 
 async def on_language_selected(c: CallbackQuery, select: Any, manager: DialogManager) -> None:
+    """
+    Обработчик выбора языка.
+
+    Args:
+        c (CallbackQuery): Объект обратного вызова.
+        select (Any): Виджет выбора.
+        manager (DialogManager): Менеджер диалога.
+
+    Returns:
+        None
+    """
     language: str = select.item_id
     user = manager.event.from_user
     await localization.set_user_locale(user.id, language)
     await manager.switch_to(MainSG.main)
 
 async def check_user(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
+    """
+    Проверяет пользователя и возвращает данные для отображения.
+
+    Args:
+        dialog_manager (DialogManager): Менеджер диалога.
+        **kwargs: Дополнительные аргументы.
+
+    Returns:
+        Dict[str, Any]: Словарь с данными пользователя и локализованными строками.
+    """
     user = dialog_manager.event.from_user
     telegram_id: int = user.id
     username: str = user.username or user.full_name
@@ -75,6 +131,16 @@ async def check_user(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
     return {"error": localization.get_text("error_user_creation", locale)}
 
 async def get_tasks(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
+    """
+    Получает список задач пользователя.
+
+    Args:
+        dialog_manager (DialogManager): Менеджер диалога.
+        **kwargs: Дополнительные аргументы.
+
+    Returns:
+        Dict[str, Any]: Словарь с задачами и локализованными строками.
+    """
     user_token: str = dialog_manager.dialog_data.get("user_token")
     tasks: List[Dict[str, Any]] = await api_service.get_tasks(user_token)
     locale: str = dialog_manager.dialog_data.get("locale", "ru")
@@ -87,6 +153,16 @@ async def get_tasks(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
     }
 
 async def get_task_details(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
+    """
+    Получает детали выбранной задачи.
+
+    Args:
+        dialog_manager (DialogManager): Менеджер диалога.
+        **kwargs: Дополнительные аргументы.
+
+    Returns:
+        Dict[str, Any]: Словарь с деталями задачи и локализованными строками.
+    """
     user_token: str = dialog_manager.dialog_data.get("user_token")
     task_id: str = dialog_manager.dialog_data.get("selected_task_id")
     locale: str = dialog_manager.dialog_data.get("locale", "ru")
@@ -115,6 +191,16 @@ async def get_task_details(dialog_manager: DialogManager, **kwargs) -> Dict[str,
     }
 
 async def get_categories(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
+    """
+    Получает список категорий пользователя.
+
+    Args:
+        dialog_manager (DialogManager): Менеджер диалога.
+        **kwargs: Дополнительные аргументы.
+
+    Returns:
+        Dict[str, Any]: Словарь с категориями и локализованными строками.
+    """
     user_token: str = dialog_manager.dialog_data.get("user_token")
     categories: List[Dict[str, Any]] = await api_service.get_categories(user_token)
     locale: str = dialog_manager.dialog_data.get("locale", "ru")
@@ -136,6 +222,16 @@ async def get_categories(dialog_manager: DialogManager, **kwargs) -> Dict[str, A
     }
 
 async def get_categories_for_assignment(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
+    """
+    Получает список категорий для назначения задаче.
+
+    Args:
+        dialog_manager (DialogManager): Менеджер диалога.
+        **kwargs: Дополнительные аргументы.
+
+    Returns:
+        Dict[str, Any]: Словарь с категориями и локализованными строками.
+    """
     user_token: str = dialog_manager.dialog_data.get("user_token")
     categories: List[Dict[str, Any]] = await api_service.get_categories(user_token)
     locale: str = dialog_manager.dialog_data.get("locale", "ru")
@@ -150,6 +246,16 @@ async def get_categories_for_assignment(dialog_manager: DialogManager, **kwargs)
     }
 
 async def get_comments(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any]:
+    """
+    Получает список комментариев для выбранной задачи.
+
+    Args:
+        dialog_manager (DialogManager): Менеджер диалога.
+        **kwargs: Дополнительные аргументы.
+
+    Returns:
+        Dict[str, Any]: Словарь с комментариями и локализованными строками.
+    """
     user_token: str = dialog_manager.dialog_data.get("user_token")
     task_id: str = dialog_manager.dialog_data.get("selected_task_id")
     comments: List[Dict[str, Any]] = await api_service.get_comments(user_token, task_id)
@@ -173,6 +279,16 @@ async def get_comments(dialog_manager: DialogManager, **kwargs) -> Dict[str, Any
     }
 
 async def get_create_comment(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
+    """
+    Получает локализованные строки для создания комментария.
+
+    Args:
+        dialog_manager (DialogManager): Менеджер диалога.
+        **kwargs: Дополнительные аргументы.
+
+    Returns:
+        Dict[str, str]: Словарь с локализованными строками.
+    """
     locale: str = dialog_manager.dialog_data.get("locale", "ru")
     return {
         "create_comment": localization.get_text("create_comment", locale),
@@ -181,6 +297,16 @@ async def get_create_comment(dialog_manager: DialogManager, **kwargs) -> Dict[st
     }
 
 async def get_create_category(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
+    """
+    Получает локализованные строки для создания категории.
+
+    Args:
+        dialog_manager (DialogManager): Менеджер диалога.
+        **kwargs: Дополнительные аргументы.
+
+    Returns:
+        Dict[str, str]: Словарь с локализованными строками.
+    """
     locale: str = dialog_manager.dialog_data.get("locale", "ru")
     return {
         "create_category": localization.get_text("create_category", locale),
@@ -189,6 +315,16 @@ async def get_create_category(dialog_manager: DialogManager, **kwargs) -> Dict[s
     }
 
 async def get_create_task(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
+    """
+    Получает локализованные строки для создания задачи.
+
+    Args:
+        dialog_manager (DialogManager): Менеджер диалога.
+        **kwargs: Дополнительные аргументы.
+
+    Returns:
+        Dict[str, str]: Словарь с локализованными строками.
+    """
     locale: str = dialog_manager.dialog_data.get("locale", "ru")
     return {
         "create_task": localization.get_text("create_task", locale),
@@ -197,6 +333,16 @@ async def get_create_task(dialog_manager: DialogManager, **kwargs) -> Dict[str, 
     }
 
 async def get_task_description(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
+    """
+    Получает локализованные строки для ввода описания задачи.
+
+    Args:
+        dialog_manager (DialogManager): Менеджер диалога.
+        **kwargs: Дополнительные аргументы.
+
+    Returns:
+        Dict[str, str]: Словарь с локализованными строками.
+    """
     locale: str = dialog_manager.dialog_data.get("locale", "ru")
     return {
         "enter_task_description": localization.get_text("enter_task_description", locale),
@@ -204,6 +350,16 @@ async def get_task_description(dialog_manager: DialogManager, **kwargs) -> Dict[
     }
 
 async def get_task_due_date(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
+    """
+    Получает локализованные строки для ввода срока выполнения задачи.
+
+    Args:
+        dialog_manager (DialogManager): Менеджер диалога.
+        **kwargs: Дополнительные аргументы.
+
+    Returns:
+        Dict[str, str]: Словарь с локализованными строками.
+    """
     locale: str = dialog_manager.dialog_data.get("locale", "ru")
     return {
         "enter_task_due_date": localization.get_text("enter_task_due_date", locale),
@@ -211,6 +367,16 @@ async def get_task_due_date(dialog_manager: DialogManager, **kwargs) -> Dict[str
     }
 
 async def get_task_categories(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
+    """
+    Получает локализованные строки для ввода категорий задачи.
+
+    Args:
+        dialog_manager (DialogManager): Менеджер диалога.
+        **kwargs: Дополнительные аргументы.
+
+    Returns:
+        Dict[str, str]: Словарь с локализованными строками.
+    """
     locale: str = dialog_manager.dialog_data.get("locale", "ru")
     return {
         "enter_task_categories": localization.get_text("enter_task_categories", locale),
@@ -218,6 +384,16 @@ async def get_task_categories(dialog_manager: DialogManager, **kwargs) -> Dict[s
     }
 
 async def get_update_title(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
+    """
+    Получает локализованные строки для обновления заголовка задачи.
+
+    Args:
+        dialog_manager (DialogManager): Менеджер диалога.
+        **kwargs: Дополнительные аргументы.
+
+    Returns:
+        Dict[str, str]: Словарь с локализованными строками.
+    """
     locale: str = dialog_manager.dialog_data.get("locale", "ru")
     return {
         "enter_new_title": localization.get_text("enter_new_title", locale),
@@ -225,6 +401,16 @@ async def get_update_title(dialog_manager: DialogManager, **kwargs) -> Dict[str,
     }
 
 async def get_update_description(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
+    """
+    Получает локализованные строки для обновления описания задачи.
+
+    Args:
+        dialog_manager (DialogManager): Менеджер диалога.
+        **kwargs: Дополнительные аргументы.
+
+    Returns:
+        Dict[str, str]: Словарь с локализованными строками.
+    """
     locale: str = dialog_manager.dialog_data.get("locale", "ru")
     return {
         "enter_new_description": localization.get_text("enter_new_description", locale),
@@ -232,6 +418,16 @@ async def get_update_description(dialog_manager: DialogManager, **kwargs) -> Dic
     }
 
 async def get_update_due_date(dialog_manager: DialogManager, **kwargs) -> Dict[str, str]:
+    """
+    Получает локализованные строки для обновления срока выполнения задачи.
+
+    Args:
+        dialog_manager (DialogManager): Менеджер диалога.
+        **kwargs: Дополнительные аргументы.
+
+    Returns:
+        Dict[str, str]: Словарь с локализованными строками.
+    """
     locale: str = dialog_manager.dialog_data.get("locale", "ru")
     return {
         "enter_new_due_date": localization.get_text("enter_new_due_date", locale),
@@ -239,6 +435,18 @@ async def get_update_due_date(dialog_manager: DialogManager, **kwargs) -> Dict[s
     }
 
 async def on_delete_comment(c: CallbackQuery, widget: Button, manager: DialogManager, item_id: str) -> None:
+    """
+    Обработчик удаления комментария.
+
+    Args:
+        c (CallbackQuery): Объект обратного вызова.
+        widget (Button): Виджет кнопки.
+        manager (DialogManager): Менеджер диалога.
+        item_id (str): ID комментария для удаления.
+
+    Returns:
+        None
+    """
     user_token: str = manager.dialog_data.get("user_token")
     success: bool = await api_service.delete_comment(user_token, item_id)
     locale: str = manager.dialog_data.get("locale", "ru")
@@ -264,6 +472,18 @@ async def on_delete_comment(c: CallbackQuery, widget: Button, manager: DialogMan
     return await manager.switch_to(MainSG.comments)
 
 async def on_category_del(c: CallbackQuery, widget: Button, manager: DialogManager, item_id: str) -> None:
+    """
+    Обработчик удаления категории.
+
+    Args:
+        c (CallbackQuery): Объект обратного вызова.
+        widget (Button): Виджет кнопки.
+        manager (DialogManager): Менеджер диалога.
+        item_id (str): ID категории для удаления.
+
+    Returns:
+        None
+    """
     user_token: str = manager.dialog_data.get("user_token")
     success: bool = await api_service.delete_category(user_token, item_id)
     locale: str = manager.dialog_data.get("locale", "ru")
@@ -277,6 +497,18 @@ async def on_category_del(c: CallbackQuery, widget: Button, manager: DialogManag
     await manager.update({"categories": await api_service.get_categories(user_token)})
 
 async def on_category_selected(c: CallbackQuery, widget: Button, manager: DialogManager, item_id: str) -> None:
+    """
+    Обработчик выбора категории.
+
+    Args:
+        c (CallbackQuery): Объект обратного вызова.
+        widget (Button): Виджет кнопки.
+        manager (DialogManager): Менеджер диалога.
+        item_id (str): ID выбранной категории.
+
+    Returns:
+        None
+    """
     selected_categories: List[Dict[str, str]] = manager.dialog_data.get("selected_categories", [])
     all_categories: List[Dict[str, Any]] = manager.dialog_data.get("all_categories", [])
 
@@ -293,6 +525,17 @@ async def on_category_selected(c: CallbackQuery, widget: Button, manager: Dialog
         manager.dialog_data["selected_categories"] = selected_categories
 
 async def on_save_categories(c: CallbackQuery, widget: Button, manager: DialogManager) -> None:
+    """
+    Обработчик сохранения выбранных категорий.
+
+    Args:
+        c (CallbackQuery): Объект обратного вызова.
+        widget (Button): Виджет кнопки.
+        manager (DialogManager): Менеджер диалога.
+
+    Returns:
+        None
+    """
     user_token: str = manager.dialog_data.get("user_token")
     task_id: str = manager.dialog_data.get("selected_task_id")
     locale: str = manager.dialog_data.get("locale", "ru")
@@ -305,6 +548,17 @@ async def on_save_categories(c: CallbackQuery, widget: Button, manager: DialogMa
     await manager.switch_to(MainSG.task_details)
 
 async def on_create_task(message: Message, message_input: MessageInput, manager: DialogManager) -> None:
+    """
+    Обработчик создания задачи.
+
+    Args:
+        message (Message): Объект сообщения.
+        message_input (MessageInput): Виджет ввода сообщения.
+        manager (DialogManager): Менеджер диалога.
+
+    Returns:
+        None
+    """
     user_token: str = manager.dialog_data.get("user_token")
     title: str = message.text
     locale: str = manager.dialog_data.get("locale", "ru")
@@ -313,6 +567,17 @@ async def on_create_task(message: Message, message_input: MessageInput, manager:
     await manager.switch_to(MainSG.create_task_description)
 
 async def on_task_description(message: Message, message_input: MessageInput, manager: DialogManager) -> None:
+    """
+    Обработчик ввода описания задачи.
+
+    Args:
+        message (Message): Объект сообщения.
+        message_input (MessageInput): Виджет ввода сообщения.
+        manager (DialogManager): Менеджер диалога.
+
+    Returns:
+        None
+    """
     description: str = message.text
     manager.dialog_data["task_description"] = description
     locale: str = manager.dialog_data.get("locale", "ru")
@@ -320,6 +585,17 @@ async def on_task_description(message: Message, message_input: MessageInput, man
     await manager.switch_to(MainSG.create_task_due_date)
 
 async def on_task_due_date(message: Message, message_input: MessageInput, manager: DialogManager) -> None:
+    """
+    Обработчик ввода срока выполнения задачи.
+
+    Args:
+        message (Message): Объект сообщения.
+        message_input (MessageInput): Виджет ввода сообщения.
+        manager (DialogManager): Менеджер диалога.
+
+    Returns:
+        None
+    """
     due_date: str = message.text
     manager.dialog_data["task_due_date"] = due_date
     locale: str = manager.dialog_data.get("locale", "ru")
@@ -327,6 +603,17 @@ async def on_task_due_date(message: Message, message_input: MessageInput, manage
     await manager.switch_to(MainSG.create_task_categories)
 
 async def on_update_title(message: Message, message_input: MessageInput, manager: DialogManager) -> None:
+    """
+    Обработчик обновления заголовка задачи.
+
+    Args:
+        message (Message): Объект сообщения.
+        message_input (MessageInput): Виджет ввода сообщения.
+        manager (DialogManager): Менеджер диалога.
+
+    Returns:
+        None
+    """
     user_token: str = manager.dialog_data.get("user_token")
     task_id: str = manager.dialog_data.get("selected_task_id")
     new_title: str = message.text
@@ -337,6 +624,17 @@ async def on_update_title(message: Message, message_input: MessageInput, manager
         await message.answer(localization.get_text("error_updating_task", manager.dialog_data.get("locale", "ru")))
 
 async def on_update_description(message: Message, message_input: MessageInput, manager: DialogManager) -> None:
+    """
+    Обработчик обновления описания задачи.
+
+    Args:
+        message (Message): Объект сообщения.
+        message_input (MessageInput): Виджет ввода сообщения.
+        manager (DialogManager): Менеджер диалога.
+
+    Returns:
+        None
+    """
     user_token: str = manager.dialog_data.get("user_token")
     task_id: str = manager.dialog_data.get("selected_task_id")
     new_description: str = message.text
@@ -347,6 +645,17 @@ async def on_update_description(message: Message, message_input: MessageInput, m
         await message.answer(localization.get_text("error_updating_task", manager.dialog_data.get("locale", "ru")))
 
 async def on_update_due_date(message: Message, message_input: MessageInput, manager: DialogManager) -> None:
+    """
+    Обработчик обновления срока выполнения задачи.
+
+    Args:
+        message (Message): Объект сообщения.
+        message_input (MessageInput): Виджет ввода сообщения.
+        manager (DialogManager): Менеджер диалога.
+
+    Returns:
+        None
+    """
     user_token: str = manager.dialog_data.get("user_token")
     task_id: str = manager.dialog_data.get("selected_task_id")
     new_due_date: str = message.text
@@ -359,6 +668,17 @@ async def on_update_due_date(message: Message, message_input: MessageInput, mana
         await message.answer(localization.get_text("error_updating_task", manager.dialog_data.get("locale", "ru")))
 
 async def on_task_categories(message: Message, message_input: MessageInput, manager: DialogManager) -> None:
+    """
+    Обработчик ввода категорий задачи.
+
+    Args:
+        message (Message): Объект сообщения.
+        message_input (MessageInput): Виджет ввода сообщения.
+        manager (DialogManager): Менеджер диалога.
+
+    Returns:
+        None
+    """
     categories: List[str] = [cat.strip() for cat in message.text.split(',')]
     user_token: str = manager.dialog_data.get("user_token")
     title: str = manager.dialog_data.get("task_title")
@@ -375,6 +695,17 @@ async def on_task_categories(message: Message, message_input: MessageInput, mana
         await manager.event.answer(localization.get_text("error_creating_task", locale))
 
 async def on_create_category(message: Message, message_input: MessageInput, manager: DialogManager) -> None:
+    """
+    Обработчик создания новой категории.
+
+    Args:
+        message (Message): Объект сообщения.
+        message_input (MessageInput): Виджет ввода сообщения.
+        manager (DialogManager): Менеджер диалога.
+
+    Returns:
+        None
+    """
     user_token: str = manager.dialog_data.get("user_token")
     name: str = message.text
     category: Optional[Dict[str, Any]] = await api_service.create_category(user_token, name)
@@ -387,6 +718,17 @@ async def on_create_category(message: Message, message_input: MessageInput, mana
         await manager.event.answer(localization.get_text("error_creating_category", locale))
 
 async def on_create_comment(message: Message, message_input: MessageInput, manager: DialogManager) -> None:
+    """
+    Обработчик создания нового комментария.
+
+    Args:
+        message (Message): Объект сообщения.
+        message_input (MessageInput): Виджет ввода сообщения.
+        manager (DialogManager): Менеджер диалога.
+
+    Returns:
+        None
+    """
     user_token: str = manager.dialog_data.get("user_token")
     content: str = message.text
     task_id: str = manager.dialog_data.get("selected_task_id")
@@ -401,6 +743,17 @@ async def on_create_comment(message: Message, message_input: MessageInput, manag
         await manager.event.answer(localization.get_text("error_creating_comment", locale))
 
 async def on_complete_and_delete_task(c: CallbackQuery, widget: Button, manager: DialogManager) -> None:
+    """
+    Обработчик завершения и удаления задачи.
+
+    Args:
+        c (CallbackQuery): Объект обратного вызова.
+        widget (Button): Виджет кнопки.
+        manager (DialogManager): Менеджер диалога.
+
+    Returns:
+        None
+    """
     user_token: str = manager.dialog_data.get("user_token")
     task_id: str = manager.dialog_data.get("selected_task_id")
     locale: str = manager.dialog_data.get("locale", "ru")

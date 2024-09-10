@@ -8,6 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from tasks.models import Task, Category
 from tasks.serializers import TaskCreateSerializer, TaskUpdateSerializer, CategorySerializer, UserSerializer, PublicUserSerializer
+from tasks.task_management import delete_task_comments
 
 logger = settings.LOGGER.get_logger('views')
 
@@ -91,6 +92,8 @@ class TaskViewSet(viewsets.ModelViewSet):
         """
         try:
             logger.info(f"Удаление задачи пользователем {request.user}")
+            instance = self.get_object()
+            delete_task_comments(str(instance.id))
             return super().destroy(request, *args, **kwargs)
         except Exception as e:
             logger.log_exception(f"Ошибка при удалении задачи пользователем {request.user}")
