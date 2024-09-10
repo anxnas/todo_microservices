@@ -1,13 +1,14 @@
 import json
 import asyncpg
 from config import config
+from typing import Dict, Any, Optional
 
 class Localization:
     def __init__(self):
-        self.locales = {}
+        self.locales: Dict[str, Dict[str, str]] = {}
         self.load_locales()
 
-    def load_locales(self):
+    def load_locales(self) -> None:
         with open('locales/ru.json', 'r', encoding='utf-8') as f:
             self.locales['ru'] = json.load(f)
         with open('locales/en.json', 'r', encoding='utf-8') as f:
@@ -20,9 +21,9 @@ class Localization:
             print(f"Error getting localized text for key '{key}' and locale '{locale}': {e}")
             return key
 
-    async def init_db(self):
+    async def init_db(self) -> None:
         # Подключение к серверу PostgreSQL
-        system_conn = await asyncpg.connect(
+        system_conn: asyncpg.Connection = await asyncpg.connect(
             user=config.POSTGRES_USER,
             password=config.POSTGRES_PASSWORD,
             host=config.POSTGRES_HOST,
@@ -30,7 +31,7 @@ class Localization:
         )
 
         # Проверка существования базы данных
-        db_exists = await system_conn.fetchval(
+        db_exists: Optional[int] = await system_conn.fetchval(
             "SELECT 1 FROM pg_database WHERE datname = $1",
             config.POSTGRES_DB_TODO
         )
@@ -42,7 +43,7 @@ class Localization:
         await system_conn.close()
 
         # Подключение к созданной базе данных
-        conn = await asyncpg.connect(
+        conn: asyncpg.Connection = await asyncpg.connect(
             user=config.POSTGRES_USER,
             password=config.POSTGRES_PASSWORD,
             database=config.POSTGRES_DB_TODO,
@@ -61,9 +62,9 @@ class Localization:
 
         await conn.close()
 
-    async def set_user_locale(self, telegram_id: int, locale: str):
+    async def set_user_locale(self, telegram_id: int, locale: str) -> None:
         await self.init_db()  # Убедимся, что база данных и таблица существуют
-        conn = await asyncpg.connect(
+        conn: asyncpg.Connection = await asyncpg.connect(
             user=config.POSTGRES_USER,
             password=config.POSTGRES_PASSWORD,
             database=config.POSTGRES_DB_TODO,
@@ -79,18 +80,18 @@ class Localization:
 
     async def get_user_locale(self, telegram_id: int) -> str:
         await self.init_db()  # Убедимся, что база данных и таблица существуют
-        conn = await asyncpg.connect(
+        conn: asyncpg.Connection = await asyncpg.connect(
             user=config.POSTGRES_USER,
             password=config.POSTGRES_PASSWORD,
             database=config.POSTGRES_DB_TODO,
             host=config.POSTGRES_HOST,
             port=config.POSTGRES_PORT
         )
-        locale = await conn.fetchval(
+        locale: Optional[str] = await conn.fetchval(
             "SELECT locale FROM telegram_user WHERE telegram_id = $1",
             telegram_id
         )
         await conn.close()
         return locale or 'ru'
 
-localization = Localization()
+localization: Localization = Localization()
