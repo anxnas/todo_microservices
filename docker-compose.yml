@@ -5,16 +5,32 @@ services:
     image: postgres:13
     environment:
       POSTGRES_DB: todo_db
-      POSTGRES_USER: todo_user
-      POSTGRES_PASSWORD: todo_password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Mudar-Mudar-bek92920902!_@@-SQL
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
   django_backend:
     build:
       context: ./django_backend
     depends_on:
       - postgres
+    environment:
+      DJANGO_SETTINGS_MODULE: todo_list.settings
+      PYTHONUNBUFFERED: 1
+      API_USERNAME_TODO: ваш_логин
+      API_PASSWORD_TODO: ваш_пароль
+      POSTGRES_DB_TODO: todo_db
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ваш_пароль_бд
+      POSTGRES_PORT: 5432
+      DJANGO_PORT: 8000
+      DJANGO_URL: http://django_backend:8000
+      FASTAPI_PORT: 8080
+      FASTAPI_URL: http://fastapi_microservice:8080
     ports:
       - "8000:8000"
 
@@ -23,6 +39,20 @@ services:
       context: ./fastapi_microservice
     depends_on:
       - postgres
+      - django_backend
+    environment:
+      API_USERNAME_TODO: ваш_логин
+      API_PASSWORD_TODO: ваш_пароль
+      POSTGRES_DB_TODO: todo_db
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ваш_пароль_бд
+      POSTGRES_PORT: 5432
+      DJANGO_PORT: 8000
+      DJANGO_URL: http://django_backend:8000
+      FASTAPI_PORT: 8080
+      FASTAPI_URL: http://fastapi_microservice:8080
+      REDIS_URL: redis://redis:6379
     ports:
       - "8080:8080"
 
@@ -32,6 +62,24 @@ services:
     depends_on:
       - django_backend
       - fastapi_microservice
+    environment:
+      API_USERNAME_TODO: ваш_логин
+      API_PASSWORD_TODO: ваш_пароль
+      POSTGRES_DB_TODO: todo_db
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ваш_пароль_бд
+      POSTGRES_PORT: 5432
+      DJANGO_PORT: 8000
+      DJANGO_URL: http://django_backend:8000
+      FASTAPI_PORT: 8080
+      FASTAPI_URL: http://fastapi_microservice:8080
+      BOT_TOKEN: ваш_токен
+
+  redis:
+    image: redis:6
+    ports:
+      - "6379:6379"
 
 volumes:
   postgres_data:

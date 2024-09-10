@@ -4,7 +4,7 @@ from django.conf import settings
 
 def create_database() -> None:
     conn = psycopg2.connect(
-        dbname='postgres',
+        dbname=settings.DATABASES['default']['NAME'],
         user=settings.DATABASES['default']['USER'],
         password=settings.DATABASES['default']['PASSWORD'],
         host=settings.DATABASES['default']['HOST'],
