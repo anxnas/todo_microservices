@@ -156,4 +156,4 @@ RUNNING_TESTS = False  # Это будет True, когда запускаютс
 if 'test' in sys.argv:
     RUNNING_TESTS = True
 
-COMMENTS_SERVICE_URL = "http://127.0.0.1:8080"
+COMMENTS_SERVICE_URL = os.getenv("FASTAPI_URL")

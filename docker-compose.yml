@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: todo_db
+      POSTGRES_USER: todo_user
+      POSTGRES_PASSWORD: todo_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  django_backend:
+    build:
+      context: ./django_backend
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+
+  fastapi_microservice:
+    build:
+      context: ./fastapi_microservice
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+
+  telegram_bot:
+    build:
+      context: ./telegram_bot
+    depends_on:
+      - django_backend
+      - fastapi_microservice
+
+volumes:
+  postgres_data:
