@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<html lang="ru" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Docker &#8212; документация TODO Microservices 1.1.2</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
+    <script src="_static/documentation_options.js?v=010551dd"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/translations.js?v=9bfe3ffa"></script>
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" />
+    <link rel="prev" title="Telegram Bot" href="telegram_bot.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="docker">
+<h1>Docker<a class="headerlink" href="#docker" title="Ссылка на этот заголовок">¶</a></h1>
+<section id="dockerfile-django">
+<h2>Dockerfile для Django<a class="headerlink" href="#dockerfile-django" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Dockerfile определяет инструкции для сборки Docker-образа для Django. Подробная документация находится в файле <cite>django_backend/Dockerfile</cite>.</p>
+<div class="highlight-docker notranslate"><div class="highlight"><pre><span></span><span class="c"># Используем официальный образ Python</span>
+<span class="k">FROM</span><span class="w"> </span><span class="s">python:3.9-buster</span>
+
+<span class="c"># Устанавливаем рабочую директорию</span>
+<span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
+
+<span class="c"># Копируем файлы проекта</span>
+<span class="k">COPY</span><span class="w"> </span>.<span class="w"> </span>/app
+
+<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>gcc<span class="w"> </span>libpq-dev<span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*
+
+<span class="c"># Устанавливаем зависимости</span>
+<span class="k">RUN</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--no-cache-dir<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+
+<span class="c"># Открываем порт</span>
+<span class="k">EXPOSE</span><span class="w"> </span><span class="s">8000</span>
+</pre></div>
+</div>
+</section>
+<section id="dockerfile-fastapi">
+<h2>Dockerfile для FastAPI<a class="headerlink" href="#dockerfile-fastapi" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Dockerfile определяет инструкции для сборки Docker-образа для FastAPI. Подробная документация находится в файле <cite>fastapi_microservice/Dockerfile</cite>.</p>
+<div class="highlight-docker notranslate"><div class="highlight"><pre><span></span><span class="c"># Используем официальный образ Python</span>
+<span class="k">FROM</span><span class="w"> </span><span class="s">python:3.9-buster</span>
+
+<span class="c"># Устанавливаем рабочую директорию</span>
+<span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
+
+<span class="c"># Копируем файлы проекта</span>
+<span class="k">COPY</span><span class="w"> </span>.<span class="w"> </span>/app
+
+<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>gcc<span class="w"> </span>libpq-dev<span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*
+
+<span class="c"># Устанавливаем зависимости</span>
+<span class="k">RUN</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--no-cache-dir<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+
+<span class="c"># Открываем порт</span>
+<span class="k">EXPOSE</span><span class="w"> </span><span class="s">8080</span>
+</pre></div>
+</div>
+</section>
+<section id="dockerfile-telegram-bot">
+<h2>Dockerfile для Telegram Bot<a class="headerlink" href="#dockerfile-telegram-bot" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Dockerfile определяет инструкции для сборки Docker-образа для Telegram Bot. Подробная документация находится в файле <cite>telegram_bot/Dockerfile</cite>.</p>
+<div class="highlight-docker notranslate"><div class="highlight"><pre><span></span><span class="c"># Используем официальный образ Python</span>
+<span class="k">FROM</span><span class="w"> </span><span class="s">python:3.9-buster</span>
+
+<span class="c"># Устанавливаем рабочую директорию</span>
+<span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
+
+<span class="c"># Копируем файлы проекта</span>
+<span class="k">COPY</span><span class="w"> </span>.<span class="w"> </span>/app
+
+<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>gcc<span class="w"> </span>libpq-dev<span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*
+
+<span class="c"># Устанавливаем зависимости</span>
+<span class="k">RUN</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--no-cache-dir<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+
+<span class="c"># Устанавливаем рабочую директорию на уровень, где находится bot.py</span>
+<span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app/app</span>
+</pre></div>
+</div>
+</section>
+<section id="docker-compose-yml">
+<h2>docker-compose.yml<a class="headerlink" href="#docker-compose-yml" title="Ссылка на этот заголовок">¶</a></h2>
+<p>Файл <cite>docker-compose.yml</cite> определяет конфигурацию для запуска всех сервисов в контейнерах. Подробная документация находится в файле <cite>docker-compose.yml</cite>.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">TODO Microservices</a></h1>
+
+
+
+
+
+
+
+
+<h3>Навигация</h3>
+<p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Введение</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Установка и запуск</a></li>
+<li class="toctree-l1"><a class="reference internal" href="django_backend.html">Django Backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fastapi_microservice.html">FastAPI Microservice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="telegram_bot.html">Telegram Bot</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Docker</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dockerfile-django">Dockerfile для Django</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dockerfile-fastapi">Dockerfile для FastAPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dockerfile-telegram-bot">Dockerfile для Telegram Bot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#docker-compose-yml">docker-compose.yml</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="telegram_bot.html" title="предыдущая глава">Telegram Bot</a></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Быстрый поиск</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, anxnas.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="_sources/docker.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
