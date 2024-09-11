@@ -120,7 +120,7 @@ class APIService:
         data: Dict[str, Any] = {
             "username": username,
             "password": password,
-            "telegram_id": telegram_id
+            "id": telegram_id
         }
         async with self.session.post(f"{self.base_url}/users/", json=data, headers=self.get_admin_headers()) as response:
             if response.status == 201:
