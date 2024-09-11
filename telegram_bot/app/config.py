@@ -1,5 +1,7 @@
 import os
 from typing import Optional
+from profi_log import MasterLogger
+
 
 class Config:
     """
@@ -27,5 +29,7 @@ class Config:
     POSTGRES_DB_TODO: Optional[str] = os.getenv("POSTGRES_DB_TODO")
     POSTGRES_HOST: Optional[str] = os.getenv("POSTGRES_HOST")
     POSTGRES_PORT: Optional[str] = os.getenv("POSTGRES_PORT")
+    LOGGER = MasterLogger("logs/register.log", level='INFO')
+    LOGGER_CONSOLE = LOGGER.setup_colored_console_logging()
 
 config = Config()

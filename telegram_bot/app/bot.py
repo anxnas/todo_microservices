@@ -7,6 +7,8 @@ from dialogs import main_dialog, MainSG
 from services.api import api_service
 from utils.localization import localization
 
+logger = config.LOGGER.get_logger(__name__)
+
 # Инициализация бота и диспетчера
 bot = Bot(token=config.BOT_TOKEN)
 storage = MemoryStorage()
@@ -28,10 +30,13 @@ async def start_command(message, dialog_manager):
         None
     """
     user_id = message.from_user.id
+    logger.info(f"Пользователь {user_id} запустил команду /start")
     locale = await localization.get_user_locale(user_id)
     if locale:
+        logger.info(f"Запуск основного диалога для пользователя {user_id}")
         await dialog_manager.start(MainSG.main, mode=StartMode.RESET_STACK)
     else:
+        logger.info(f"Запуск диалога выбора языка для пользователя {user_id}")
         await dialog_manager.start(MainSG.language_select, mode=StartMode.RESET_STACK)
 
 def register_dialogs():
@@ -41,6 +46,7 @@ def register_dialogs():
     Returns:
         None
     """
+    logger.info("Регистрация диалогов и маршрутизаторов")
     setup_dialogs(dp)
     dp.include_router(main_dialog)
     dp.include_router(router)
@@ -54,9 +60,14 @@ async def on_startup():
     Returns:
         None
     """
-    await api_service.create_session()
-    await localization.init_db()
-    register_dialogs()
+    logger.info("Запуск бота")
+    try:
+        await api_service.create_session()
+        await localization.init_db()
+        register_dialogs()
+        logger.info("Бот успешно запущен")
+    except Exception as e:
+        logger.log_exception("Ошибка при запуске бота")
 
 async def on_shutdown():
     """
@@ -67,7 +78,12 @@ async def on_shutdown():
     Returns:
         None
     """
-    await api_service.close_session()
+    logger.info("Завершение работы бота")
+    try:
+        await api_service.close_session()
+        logger.info("Сессия API успешно закрыта")
+    except Exception as e:
+        logger.log_exception("Ошибка при закрытии сессии API")
 
 async def start_bot():
     """
@@ -78,9 +94,13 @@ async def start_bot():
     Returns:
         None
     """
+    logger.info("Начало запуска бота")
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
-    await dp.start_polling(bot)
+    try:
+        await dp.start_polling(bot)
+    except Exception as e:
+        logger.log_exception("Ошибка при запуске поллинга бота")
 
 if __name__ == "__main__":
     import asyncio
