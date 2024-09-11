@@ -300,7 +300,7 @@ class APIService:
             logger.error(f"Ошибка создания комментария для задачи {task_id}")
             return None
 
-async def delete_comment(self, user_token: str, comment_id: int) -> bool:
+    async def delete_comment(self, user_token: str, comment_id: int) -> bool:
         """
         Удаляет комментарий по его ID.
 
