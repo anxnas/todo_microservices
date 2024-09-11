@@ -31,8 +31,18 @@ services:
       DJANGO_URL: http://django_backend:8000
       FASTAPI_PORT: 8080
       FASTAPI_URL: http://fastapi_microservice:8080
+      DJANGO_SUPERUSER_USERNAME: имя_суперпользователя
+      DJANGO_SUPERUSER_EMAIL: почта_суперпользователя
+      DJANGO_SUPERUSER_PASSWORD: пароль_суперпользователя
     ports:
       - "8000:8000"
+    command: >
+      sh -c "
+      python manage.py makemigrations &&
+      python manage.py migrate &&
+      python create_superuser.py &&
+      python manage.py runserver 0.0.0.0:8000
+      "
 
   fastapi_microservice:
     build:
@@ -55,6 +65,10 @@ services:
       REDIS_URL: redis://redis:6379
     ports:
       - "8080:8080"
+    command: >
+      sh -c "
+      python run.py
+      "
 
   telegram_bot:
     build:
@@ -75,6 +89,10 @@ services:
       FASTAPI_PORT: 8080
       FASTAPI_URL: http://fastapi_microservice:8080
       BOT_TOKEN: ваш_токен
+    command: >
+      sh -c "
+      python bot.py
+      "
 
   redis:
     image: redis:6

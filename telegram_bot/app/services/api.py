@@ -1,4 +1,5 @@
 import aiohttp
+import asyncio
 from typing import List, Dict, Any, Optional, Tuple
 from config import config
 from models.user import User
@@ -27,7 +28,14 @@ class APIService:
         Создает сессию для HTTP-запросов и выполняет вход администратора.
         """
         self.session = aiohttp.ClientSession()
-        await self.admin_login(config.API_USERNAME_TODO, config.API_PASSWORD_TODO)
+        while True:
+            try:
+                await self.admin_login(config.API_USERNAME_TODO, config.API_PASSWORD_TODO)
+                print("Успешный вход администратора")
+                break  # Выход из цикла при успешном входе
+            except Exception as e:
+                print(f"Ошибка при входе администратора: {e}")
+                await asyncio.sleep(5)
 
     async def close_session(self) -> None:
         """
