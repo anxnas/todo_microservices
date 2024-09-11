@@ -12,11 +12,6 @@ sys.path.insert(0, os.path.abspath('../fastapi_microservice'))
 sys.path.insert(0, os.path.abspath('../telegram_bot'))
 sys.path.insert(0, os.path.abspath('../telegram_bot/app'))
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'todo_list.settings'
-
-import django
-django.setup()
-
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
